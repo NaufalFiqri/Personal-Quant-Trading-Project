@@ -16,6 +16,8 @@ function printResults(ticker, result) {
   console.log(`Buy & hold return:       ${result.buyAndHoldReturnPercent.toFixed(2)}%`);
   console.log(`Max drawdown:            ${result.maxDrawdownPercent.toFixed(2)}%`);
   console.log(`Win rate:                ${result.winRate.toFixed(2)}%`);
+  console.log(`Sharpe ratio:            ${result.sharpeRatio.toFixed(3)}`);
+  console.log(`Time in market:          ${result.timeInMarketPercent.toFixed(2)}%`);
   console.log(`Number of trades:        ${result.numberOfTrades}`);
   console.log(
     `Strategy: ${result.totalReturnPercent.toFixed(2)}% vs Buy & Hold: ${result.buyAndHoldReturnPercent.toFixed(2)}%`

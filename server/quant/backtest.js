@@ -94,6 +94,42 @@ function runBacktest(bars, signals, options = {}) {
   }
   const winRate = roundTrips > 0 ? (winningRoundTrips / roundTrips) * 100 : 0;
 
+  // Sharpe ratio: return per unit of volatility, not just raw return. Two
+  // strategies can post the same total return while one got there on a
+  // smooth, steady climb and the other lurched through wild swings — the
+  // smoother one has a higher Sharpe and is arguably "better" on a
+  // risk-adjusted basis, because you'd have been able to sit through it.
+  // Computed from daily returns of the equity curve: mean return divided
+  // by its standard deviation, annualized by sqrt(252) trading days/year.
+  // Assumes a risk-free rate of 0 (i.e. ignores the return of just holding
+  // cash/T-bills) for simplicity.
+  const dailyReturns = [];
+  for (let i = 1; i < equityCurve.length; i++) {
+    const prev = equityCurve[i - 1].value;
+    const curr = equityCurve[i].value;
+    dailyReturns.push((curr - prev) / prev);
+  }
+  let sharpeRatio = 0;
+  if (dailyReturns.length > 0) {
+    const meanReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+    const variance =
+      dailyReturns.reduce((a, b) => a + (b - meanReturn) ** 2, 0) / dailyReturns.length;
+    const stdDev = Math.sqrt(variance);
+    sharpeRatio = stdDev === 0 ? 0 : (meanReturn / stdDev) * Math.sqrt(252);
+  }
+
+  // Time in market: walk the bars again with a simple position flag,
+  // toggled by the same signals used during simulation above.
+  let heldShares = 0;
+  let barsHeld = 0;
+  for (const bar of bars) {
+    const signal = signalByDate.get(bar.date);
+    if (signal && signal.action === "BUY") heldShares = 1;
+    else if (signal && signal.action === "SELL") heldShares = 0;
+    if (heldShares > 0) barsHeld++;
+  }
+  const timeInMarketPercent = bars.length > 0 ? (barsHeld / bars.length) * 100 : 0;
+
   return {
     initialCapital,
     finalValue,
@@ -101,6 +137,8 @@ function runBacktest(bars, signals, options = {}) {
     buyAndHoldReturnPercent,
     maxDrawdownPercent,
     winRate,
+    sharpeRatio,
+    timeInMarketPercent,
     numberOfTrades: trades.length,
     trades,
     equityCurve,

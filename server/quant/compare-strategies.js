@@ -32,6 +32,8 @@ function printTable(results) {
     "B&H%".padStart(10) +
     "MaxDD%".padStart(10) +
     "WinRate%".padStart(10) +
+    "Sharpe".padStart(9) +
+    "TimeInMkt%".padStart(11) +
     "Trades".padStart(8) +
     "  Beat B&H";
   console.log(header);
@@ -46,6 +48,8 @@ function printTable(results) {
         padNum(r.buyAndHoldReturnPercent, 10) +
         padNum(r.maxDrawdownPercent, 10) +
         padNum(r.winRate, 10) +
+        padNum(r.sharpeRatio, 9, 3) +
+        padNum(r.timeInMarketPercent, 11) +
         String(r.numberOfTrades).padStart(8) +
         "  " +
         beat
@@ -53,14 +57,9 @@ function printTable(results) {
   }
 }
 
-async function main() {
-  const endDate = new Date().toISOString().slice(0, 10);
-  const startDate = yearsAgo(endDate, 3);
-
-  console.log(`Comparison period: ${startDate} to ${endDate} (3 years)`);
-  console.log(`Strategies: ${STRATEGIES.map((s) => s.label).join(", ")}`);
-  console.log(`Tickers: ${TICKERS.join(", ")}\n`);
-
+// Runs the fixed strategy/parameter set across the fixed ticker list for
+// the given date range, returning the raw results array (no printing).
+async function runComparison(startDate, endDate) {
   const barsByTicker = {};
   for (const ticker of TICKERS) {
     barsByTicker[ticker] = await getHistoricalData(ticker, startDate, endDate);
@@ -83,10 +82,24 @@ async function main() {
         buyAndHoldReturnPercent: backtest.buyAndHoldReturnPercent,
         maxDrawdownPercent: backtest.maxDrawdownPercent,
         winRate: backtest.winRate,
+        sharpeRatio: backtest.sharpeRatio,
+        timeInMarketPercent: backtest.timeInMarketPercent,
         numberOfTrades: backtest.numberOfTrades,
       });
     }
   }
+  return results;
+}
+
+async function main() {
+  const endDate = new Date().toISOString().slice(0, 10);
+  const startDate = yearsAgo(endDate, 3);
+
+  console.log(`Comparison period: ${startDate} to ${endDate} (3 years)`);
+  console.log(`Strategies: ${STRATEGIES.map((s) => s.label).join(", ")}`);
+  console.log(`Tickers: ${TICKERS.join(", ")}\n`);
+
+  const results = await runComparison(startDate, endDate);
 
   printTable(results);
 
@@ -94,7 +107,11 @@ async function main() {
   console.log(`\n${beatCount} of ${results.length} tests beat buy & hold.`);
 }
 
-main().catch((err) => {
-  console.error("Comparison failed:", err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    console.error("Comparison failed:", err);
+    process.exit(1);
+  });
+}
+
+module.exports = { runComparison, printTable, TICKERS, STRATEGIES };
