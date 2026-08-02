@@ -43,7 +43,7 @@ function printCombo(label, ticker, windowResults, aggregate) {
   console.log("-".repeat(header.length));
 
   for (const w of windowResults) {
-    const beat = w.beatBenchmark ? "YES" : "no";
+    const beat = w.hasSignal ? (w.beatBenchmark ? "YES" : "no") : "no signal";
     console.log(
       `${w.windowStart} to ${w.windowEnd}`.padEnd(23) +
         padNum(w.returnPercent, 10) +
@@ -57,7 +57,9 @@ function printCombo(label, ticker, windowResults, aggregate) {
 
   console.log("-".repeat(header.length));
   console.log(
-    `Aggregate: winning windows ${aggregate.winningWindowsPercent.toFixed(2)}%` +
+    `Aggregate (${aggregate.windowsWithSignal} traded windows` +
+      `, ${aggregate.windowsWithoutSignal} excluded as no-signal): ` +
+      `winning windows ${aggregate.winningWindowsPercent.toFixed(2)}%` +
       `  avg return ${aggregate.averageReturnPercent.toFixed(2)}%` +
       `  avg Sharpe ${aggregate.averageSharpe.toFixed(3)}` +
       `  consistency (stdDev) ${aggregate.consistencyScore.toFixed(2)}`
