@@ -15,7 +15,10 @@ A personal project to learn systematic/quantitative trading from the ground up. 
 - Parameter sweep across multiple SMA period combinations and tickers (`sweep.js`)
 - Cross-strategy comparison (SMA/EMA/WMA crossover vs RSI mean-reversion) across tickers, reusable across date ranges (`compare-strategies.js`)
 - Same cross-strategy comparison re-run on a 2022 bear-market window (`compare-strategies-2022-bear.js`)
-- Walk-forward testing: same fixed strategies/parameters run independently across sequential 6-month windows spanning both regimes, no per-window tuning (`walkforward.js`)
+- Walk-forward testing: same fixed strategies/parameters run independently across sequential windows spanning both regimes, no per-window tuning, zero-trade windows correctly excluded from aggregates (`walkforward.js`)
+- Evidence-gathering run testing EMA 20/50 crossover across 7 tickers at two window granularities (`ema-crossover-evidence.js`)
+
+**Candidate finding under investigation, not validated:** EMA 20/50 crossover on AAPL showed a standout walk-forward result (80% winning windows, +6.97% avg return/window, Sharpe 0.949) at 6-month granularity, but on a small sample (5 traded windows). It has not held up as distinctively across other tickers or at finer window granularity - see the Journal for the actual numbers. This is an open question being investigated, not a strategy recommendation.
 
 **Not built yet:**
 - Paper trading (simulated live execution)
@@ -35,7 +38,8 @@ Pipeline: **raw data -> indicators -> strategy signals -> backtest simulation ->
 - `server/quant/sweep.js` - runs the SMA crossover strategy + backtest across a grid of short/long period combinations and tickers.
 - `server/quant/compare-strategies.js` - runs SMA/EMA/WMA crossover and RSI mean-reversion strategies through the same backtest across tickers. Exports `runComparison(startDate, endDate)` so the same fixed strategy/parameter/ticker set can be re-run over different date ranges.
 - `server/quant/compare-strategies-2022-bear.js` - re-runs `compare-strategies.js`'s comparison over the 2022-01-01 to 2022-12-31 window (a down year for US equities), unchanged strategies/parameters, to isolate the effect of market regime from the earlier 3-year (rising-market) results.
-- `server/quant/walkforward.js` - `runWalkForward(ticker, strategyFn, strategyParams, options)` splits a date range into sequential non-overlapping windows (default 6 months) and runs the same fixed strategy/parameters independently on each one, with no per-window fitting or tuning. Returns per-window results plus aggregate stats: percent of windows that beat buy & hold, average return, average Sharpe, and a consistency score (standard deviation of per-window returns - lower means more similar behavior window to window).
+- `server/quant/walkforward.js` - `runWalkForward(ticker, strategyFn, strategyParams, options)` splits a date range into sequential non-overlapping windows (default 6 months, dropping a trailing window shorter than `minWindowMonths`) and runs the same fixed strategy/parameters independently on each one, with no per-window fitting or tuning. Returns per-window results plus aggregate stats: percent of windows that beat buy & hold, average return, average Sharpe, and a consistency score (standard deviation of per-window returns - lower means more similar behavior window to window). Zero-trade windows are excluded from the aggregates but still shown per-window, labeled.
+- `server/quant/ema-crossover-evidence.js` - runs `walkforward.js` with EMA 20/50 crossover across 7 tickers (AAPL, MSFT, JNJ plus GOOGL, AMZN, NVDA, META) at both 6-month and 3-month window granularity, to gather more evidence on a standout AAPL result before treating it as anything more than a candidate finding.
 
 Each stage has a matching `test-*.js` file that exercises it against real fetched data and prints results for manual inspection.
 
@@ -56,6 +60,7 @@ node server/quant/sweep.js              # SMA parameter sweep across combos + ti
 node server/quant/compare-strategies.js # SMA vs EMA vs WMA vs RSI, across tickers (3-year window)
 node server/quant/compare-strategies-2022-bear.js # same comparison, 2022 bear-market window
 node server/quant/test-walkforward.js   # walk-forward: SMA/EMA/WMA/RSI across sequential 6-month windows, 2022-today
+node server/quant/ema-crossover-evidence.js # EMA 20/50 walk-forward across 7 tickers, 6-month and 3-month windows
 ```
 
 ## Key learnings
@@ -65,6 +70,28 @@ The first backtest (20/50 SMA crossover, 3-year window, $10k start, with fees + 
 The parameter sweep (6 period combinations x 3 tickers = 18 tests) still only beat buy & hold in 2 of 18 cases, both on JNJ. This pointed at a different question than "which parameters are best": whether the moving-average type itself, or the underlying strategy logic (trend-following crossover vs mean-reversion), matters more than tuning periods on a single approach. That's why EMA/WMA variants and an RSI mean-reversion strategy were added next, and compared across the same tickers rather than assuming the SMA crossover shape was the right one to keep tuning.
 
 ## Journal
+
+### 2026-08-02 (session 7)
+- Evidence-gathering step, prompted by the session 6 walk-forward result: EMA 20/50 crossover on AAPL stood out (80% winning windows, +6.97% avg return/window, Sharpe 0.949) but on only 5 traded windows - too small a sample to trust on its own. Built `ema-crossover-evidence.js` to gather more evidence before treating it as anything more than a candidate finding, not to confirm or debunk it.
+- Part A: re-ran EMA 20/50 walk-forward (6-month windows, 2022-01-01 to today) on AAPL/MSFT/JNJ plus 4 additional large-cap, liquid, moderate-to-high volatility tech/growth-adjacent tickers (GOOGL, AMZN, NVDA, META), same exclusion logic for zero-trade windows. AAPL/MSFT/JNJ numbers matched the session 6 run exactly, confirming nothing broke.
+  - Ticker / traded windows / no-signal windows / winning windows% / avg return% / avg Sharpe / consistency (stdDev):
+  - AAPL 5/4 - 80.00 / 6.97 / 0.949 / 7.84
+  - MSFT 8/1 - 50.00 / 0.10 / 0.092 / 8.66
+  - JNJ 6/3 - 50.00 / 0.03 / -0.526 / 3.56
+  - GOOGL 7/2 - 42.86 / 6.85 / 0.512 / 10.02
+  - AMZN 7/2 - 42.86 / 5.73 / 0.583 / 13.69
+  - NVDA 7/2 - 42.86 / -2.26 / -0.416 / 11.81
+  - META 4/5 - 25.00 / 3.46 / 0.435 / 8.77
+- Part B: same 7 tickers, same date range, `windowMonths = 3` instead of 6. Note on interpreting this table: a 50-period EMA needs ~50 trading days just to produce its first value, and a 3-month window only has ~63 trading days total - so most windows here have almost no room left for a crossover to actually occur. That's why the no-signal counts are very high (14-17 of 18 windows per ticker) and traded-window counts are very low (1-4) - this is a mismatch between window length and the strategy's own warm-up period, not a statement about the strategy's quality.
+  - Ticker / traded windows / no-signal windows / winning windows% / avg return% / avg Sharpe / consistency (stdDev):
+  - AAPL 2/16 - 50.00 / -0.67 / -1.690 / 0.35
+  - MSFT 1/17 - 0.00 / -0.15 / -2.000 / 0.00
+  - JNJ 1/17 - 0.00 / 1.00 / 1.773 / 0.00
+  - GOOGL 4/14 - 25.00 / 1.51 / 0.834 / 1.98
+  - AMZN 4/14 - 50.00 / -0.44 / -1.058 / 3.25
+  - NVDA 1/17 - 100.00 / -5.48 / -2.505 / 0.00
+  - META 1/17 - 0.00 / -0.70 / -0.252 / 0.00
+  - Given how few traded windows most tickers have at 3-month granularity, this table is not read as a reliable comparison point to the 6-month table - it mainly shows that 3-month windows are too short for this indicator's warm-up period to leave a usable sample. AAPL's 6-month standout is not confirmed or debunked by this data; both tables are left for discussion.
 
 ### 2026-08-02 (session 6)
 - Fixed a methodology bug in `walkforward.js`'s aggregate stats, found by inspecting the session 5 output: about 31% of all windows had 0 trades (the strategy never generated a signal in that 6-month slice), yet those windows' 0.00% return was still being counted in `winningWindowsPercent`, `averageReturnPercent`, and `consistencyScore`. Since `beatBenchmark` was computed as `return > buyAndHold`, a 0-trade window counted as a "win" any time the benchmark itself was negative - misrepresenting "the strategy never traded" as "the strategy made a defensive call and avoided a loss." Two different things were being conflated: not trading, and successfully avoiding a loss by trading defensively. Only the latter is a real signal about the strategy; the former is just an inactive window.
