@@ -1,4 +1,4 @@
-const { calculateSMA, calculateRSI } = require("./indicators");
+const { calculateSMA, calculateEMA, calculateWMA, calculateRSI } = require("./indicators");
 
 function arraysClose(a, b, tolerance = 1e-9) {
   if (a.length !== b.length) return false;
@@ -28,6 +28,68 @@ check(
   "SMA(3) matches expected [null,null,20,30,40]",
   arraysClose(smaResult, [null, null, 20, 30, 40]),
   smaResult
+);
+
+// EMA/WMA reaction speed: a flat series that suddenly jumps. A moving
+// average that "reacts faster" ends up numerically closer to the new
+// price a few bars after the jump than a slower-reacting one does.
+const flatThenJump = [
+  ...Array(30).fill(100),
+  ...Array(15).fill(150),
+];
+const period = 10;
+const smaJump = calculateSMA(flatThenJump, period);
+const emaJump = calculateEMA(flatThenJump, period);
+const wmaJump = calculateWMA(flatThenJump, period);
+
+// A few bars after the jump (index 33, i.e. 4 bars in), compare distance
+// from the new price (150) — smaller distance = faster reaction.
+const checkIndex = 33;
+const smaDist = Math.abs(150 - smaJump[checkIndex]);
+const emaDist = Math.abs(150 - emaJump[checkIndex]);
+const wmaDist = Math.abs(150 - wmaJump[checkIndex]);
+
+console.log(`\nAfter price jump 100->150, at index ${checkIndex}:`);
+console.log(`  SMA: ${smaJump[checkIndex].toFixed(2)} (distance from 150: ${smaDist.toFixed(2)})`);
+console.log(`  EMA: ${emaJump[checkIndex].toFixed(2)} (distance from 150: ${emaDist.toFixed(2)})`);
+console.log(`  WMA: ${wmaJump[checkIndex].toFixed(2)} (distance from 150: ${wmaDist.toFixed(2)})`);
+
+check("EMA reacts faster than SMA (closer to new price)", emaDist < smaDist, {
+  emaDist,
+  smaDist,
+});
+check("WMA reacts faster than SMA (closer to new price)", wmaDist < smaDist, {
+  wmaDist,
+  smaDist,
+});
+// Not asserted: EMA vs WMA ordering is not fixed. WMA's window is finite
+// (period bars) so on a step change it fully converges to the new price
+// after exactly `period` bars. EMA's window is infinite/asymptotic — it
+// keeps a shrinking trace of every past value forever and never fully
+// catches up. So immediately after a jump WMA can look "faster" than EMA,
+// even though EMA weights the single most recent bar the same as WMA does
+// here (both ~0.182 for period=10). Print both so this is visible instead
+// of asserting an ordering that isn't actually guaranteed.
+console.log(
+  `  (EMA vs WMA ordering is data-dependent, not fixed: WMA converges fully after ${period} bars since it drops old data outright; EMA approaches asymptotically and never fully catches up)`
+);
+
+// Basic correctness checks against hand-computed values
+const wmaResult = calculateWMA([10, 20, 30], 3);
+// weights 1,2,3 on [10,20,30] -> (10*1 + 20*2 + 30*3) / 6 = 140/6
+check(
+  "WMA(3) on [10,20,30] matches expected [null,null,23.333]",
+  arraysClose(wmaResult, [null, null, 140 / 6], 1e-6),
+  wmaResult
+);
+
+const emaResult = calculateEMA([10, 20, 30, 40, 50], 3);
+// seed = avg(10,20,30) = 20; k = 2/4 = 0.5
+// ema[3] = 40*0.5 + 20*0.5 = 30; ema[4] = 50*0.5 + 30*0.5 = 40
+check(
+  "EMA(3) on [10,20,30,40,50] matches expected [null,null,20,30,40]",
+  arraysClose(emaResult, [null, null, 20, 30, 40], 1e-9),
+  emaResult
 );
 
 // RSI rising sequence

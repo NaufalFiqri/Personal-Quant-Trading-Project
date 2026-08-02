@@ -8,6 +8,38 @@ function calculateSMA(prices, period) {
   return sma;
 }
 
+function calculateEMA(prices, period) {
+  const ema = new Array(prices.length).fill(null);
+  if (prices.length < period) return ema;
+
+  let sum = 0;
+  for (let i = 0; i < period; i++) sum += prices[i];
+  ema[period - 1] = sum / period;
+
+  const k = 2 / (period + 1);
+  for (let i = period; i < prices.length; i++) {
+    ema[i] = prices[i] * k + ema[i - 1] * (1 - k);
+  }
+
+  return ema;
+}
+
+function calculateWMA(prices, period) {
+  const wma = new Array(prices.length).fill(null);
+  const weightSum = (period * (period + 1)) / 2;
+
+  for (let i = period - 1; i < prices.length; i++) {
+    let weighted = 0;
+    for (let j = 0; j < period; j++) {
+      const weight = j + 1;
+      weighted += prices[i - period + 1 + j] * weight;
+    }
+    wma[i] = weighted / weightSum;
+  }
+
+  return wma;
+}
+
 function calculateRSI(prices, period = 14) {
   const rsi = new Array(prices.length).fill(null);
   if (prices.length <= period) return rsi;
@@ -35,4 +67,4 @@ function calculateRSI(prices, period = 14) {
   return rsi;
 }
 
-module.exports = { calculateSMA, calculateRSI };
+module.exports = { calculateSMA, calculateEMA, calculateWMA, calculateRSI };
