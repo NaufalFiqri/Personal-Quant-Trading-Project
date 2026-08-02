@@ -48,17 +48,53 @@ function readCache(ticker) {
   }
 }
 
-function writeCache(ticker, bars, rangeStart, rangeEnd) {
+function writeCache(ticker, bars, coveredRanges) {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
   const file = cachePathFor(ticker);
   const payload = {
     ticker,
     updatedAt: new Date().toISOString(),
-    rangeStart,
-    rangeEnd,
+    coveredRanges,
     bars,
   };
   fs.writeFileSync(file, JSON.stringify(payload, null, 2));
+}
+
+function addDaysToDateStr(dateStr, days) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+// Coverage is tracked as a set of explicitly-queried date intervals, not a
+// single min/max envelope: two fetches for non-adjacent periods (e.g. all
+// of 2022, then Aug 2023 onward) leave a real gap between them that was
+// never queried. A single rangeStart/rangeEnd envelope would wrongly claim
+// the whole span in between is covered too. Adjacent/overlapping intervals
+// (within 1 day) are coalesced into one; a real gap stays as two intervals,
+// so a request spanning the gap correctly misses the cache.
+function mergeRanges(ranges) {
+  const sorted = ranges.slice().sort((a, b) => (a.start < b.start ? -1 : a.start > b.start ? 1 : 0));
+  const merged = [];
+  for (const r of sorted) {
+    const last = merged[merged.length - 1];
+    if (last && r.start <= addDaysToDateStr(last.end, 1)) {
+      if (r.end > last.end) last.end = r.end;
+    } else {
+      merged.push({ start: r.start, end: r.end });
+    }
+  }
+  return merged;
+}
+
+function getCoveredRanges(cache) {
+  if (!cache) return [];
+  if (cache.coveredRanges) return cache.coveredRanges;
+  // Back-compat with the older single rangeStart/rangeEnd cache format.
+  if (cache.rangeStart && cache.rangeEnd) {
+    return [{ start: cache.rangeStart, end: cache.rangeEnd }];
+  }
+  return [];
 }
 
 function mergeBars(existingBars, newBars) {
@@ -97,12 +133,11 @@ function normalizeQuotes(quotes) {
   return bars;
 }
 
-// Coverage is tracked via the actually-queried range (rangeStart/rangeEnd),
-// not inferred from bar dates: the requested start/end may fall on a
-// weekend/holiday with no bar, which would otherwise look like a gap.
+// A request is covered only if some single queried interval fully contains
+// it - not just if the outer min/max of all queried intervals does.
 function cacheCoversRange(cache, startDateStr, endDateStr) {
-  if (!cache || !cache.rangeStart || !cache.rangeEnd) return false;
-  return cache.rangeStart <= startDateStr && cache.rangeEnd >= endDateStr;
+  const ranges = getCoveredRanges(cache);
+  return ranges.some((r) => r.start <= startDateStr && r.end >= endDateStr);
 }
 
 async function getHistoricalData(ticker, startDate, endDate) {
@@ -130,10 +165,12 @@ async function getHistoricalData(ticker, startDate, endDate) {
   const freshBars = normalizeQuotes(result.quotes || []);
   const mergedBars = cache ? mergeBars(cache.bars, freshBars) : freshBars;
 
-  const rangeStart = cache && cache.rangeStart < startDateStr ? cache.rangeStart : startDateStr;
-  const rangeEnd = cache && cache.rangeEnd > endDateStr ? cache.rangeEnd : endDateStr;
+  const coveredRanges = mergeRanges([
+    ...getCoveredRanges(cache),
+    { start: startDateStr, end: endDateStr },
+  ]);
 
-  writeCache(ticker, mergedBars, rangeStart, rangeEnd);
+  writeCache(ticker, mergedBars, coveredRanges);
 
   return mergedBars.filter(
     (b) => b.date >= startDateStr && b.date <= endDateStr
