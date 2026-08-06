@@ -12,18 +12,21 @@ A personal project to learn systematic/quantitative trading from the ground up. 
 
 **No strategy is currently recommended for real capital.** No paper trading or live trading has occurred - nothing in this repo places real trades. Everything runs against historical data offline.
 
+**Research Phase 2: IN PROGRESS.** Direction chosen: generic risk-management infrastructure first, before any new signal strategy. `server/quant/risk.js` (position sizing, stop-loss calculation, risk/reward validation, drawdown circuit breaker) is built and unit-tested, standalone and not yet wired into any strategy or backtest run.
+
 **Not built yet:**
 - Paper trading (simulated live execution)
 - Live trading (real orders, real money)
 - Any frontend/UI
-- Any Phase 2 strategy direction (see "What's Next")
+- A Phase 2 signal strategy that uses `risk.js`
+- Wiring `risk.js` into `backtest.js` (currently invests 100% of cash on every BUY signal with no position sizing or stop-loss)
 
 ## Architecture
 
 Pipeline: **raw data -> indicators -> strategy signals -> backtest simulation -> parameter sweep / strategy comparison / walk-forward testing**
 
 - `server/quant/data.js` - fetches historical daily OHLCV bars from Yahoo Finance, caches them to `server/data/ohlcv/<TICKER>.json` so repeated runs don't re-fetch the same range. Coverage is tracked as a set of explicitly-queried date intervals (not a single min/max envelope), so a gap between two separately-fetched periods is correctly detected as a cache miss instead of silently returning no data for the gap.
-- `server/quant/indicators.js` - pure functions computing technical indicators (SMA, EMA, WMA, RSI) from a price series.
+- `server/quant/indicators.js` - pure functions computing technical indicators (SMA, EMA, WMA, RSI, ATR) from a price series (ATR from OHLC bars instead, since it needs high/low as well as close).
 - `server/quant/strategy.js` - consumes bars + indicators and produces a list of BUY/SELL signals. Includes `maCrossoverStrategy` (SMA/EMA/WMA crossover, selectable via `maType`) and `rsiMeanReversionStrategy` (buy on recovery from oversold, sell on drop from overbought).
 - `server/quant/backtest.js` - replays a strategy's signals against historical bars day by day, simulating a portfolio with fees and slippage, and reports return, drawdown, win rate, Sharpe ratio (return per unit of volatility, annualized, risk-free rate assumed 0), time-in-market percent, and an equity curve.
 - `server/quant/sweep.js` - runs the SMA crossover strategy + backtest across a grid of short/long period combinations and tickers.
@@ -31,8 +34,9 @@ Pipeline: **raw data -> indicators -> strategy signals -> backtest simulation ->
 - `server/quant/compare-strategies-2022-bear.js` - re-runs `compare-strategies.js`'s comparison over the 2022-01-01 to 2022-12-31 window (a down year for US equities), unchanged strategies/parameters, to isolate the effect of market regime.
 - `server/quant/walkforward.js` - `runWalkForward(ticker, strategyFn, strategyParams, options)` splits a date range into sequential non-overlapping windows (default 6 months, dropping a trailing window shorter than `minWindowMonths`) and runs the same fixed strategy/parameters independently on each one, with no per-window fitting or tuning. Returns per-window results plus aggregate stats: percent of windows that beat buy & hold, average return, average Sharpe, and a consistency score (standard deviation of per-window returns). Zero-trade windows are excluded from the aggregates but still shown per-window, labeled.
 - `server/quant/ema-crossover-evidence.js` - runs `walkforward.js` with EMA 20/50 crossover across 7 tickers at both 6-month and 3-month window granularity, to test whether a standout single-ticker result replicates.
+- `server/quant/risk.js` - standalone, long-only risk-management logic, not tied to any specific strategy. `calculatePositionSize` sizes a position from account equity, a configurable risk-per-trade percent, and the stop-loss distance (with an optional `maxPositionPercent` hard cap). `calculateStopLoss` supports `"percent"` and `"atr"` methods. `validateRiskReward` rejects trades below a configurable minimum reward:risk ratio. `checkDrawdownCircuitBreaker` takes an equity curve (same `{ date, value }` shape `backtest.js` already produces) and flags whether daily or weekly loss has breached a configurable threshold - recomputed fresh from the tail of the curve each call rather than kept as hidden state, so it works the same way in a backtest loop and a future live/paper-trading loop.
 
-Each stage has a matching `test-*.js` file that exercises it against real fetched data and prints results for manual inspection.
+Each stage has a matching `test-*.js` file that exercises it against real fetched data and prints results for manual inspection, except `test-risk.js`, which uses hand-constructed price/equity scenarios (no network fetch needed) since risk.js is pure math with no external data dependency.
 
 ## How to run it
 
@@ -52,6 +56,7 @@ node server/quant/compare-strategies.js # SMA vs EMA vs WMA vs RSI, across ticke
 node server/quant/compare-strategies-2022-bear.js # same comparison, 2022 bear-market window
 node server/quant/test-walkforward.js   # walk-forward: SMA/EMA/WMA/RSI across sequential 6-month windows, 2022-today
 node server/quant/ema-crossover-evidence.js # EMA 20/50 walk-forward across 7 tickers, 6-month and 3-month windows
+node server/quant/test-risk.js          # risk-management unit tests: position sizing, stop-loss, R:R, circuit breaker
 ```
 
 ## Research Phase 1: Methodology
@@ -90,14 +95,25 @@ See [LEARNINGS.md](LEARNINGS.md) for a more detailed, informal writeup of these 
 
 ## What's Next
 
-No direction has been committed to yet. Candidates under consideration:
+**Phase 2 direction chosen:** generic risk-management infrastructure first (`risk.js`, done - see Architecture above), before any new signal strategy. Rationale: Phase 1 showed the tested indicator family has no robust edge on its own; risk management (position sizing, stop-losses, a drawdown circuit breaker) is useful under any future strategy regardless of what that strategy turns out to be, so it doesn't need a signal decision made first.
 
-- **New signal types** - moving beyond simple technical indicator crossovers/thresholds toward something with a different theoretical basis (the tested family may simply not contain a real edge, regardless of parameters).
-- **Generic risk-management infrastructure** - position sizing, stop-losses, portfolio-level rules that could sit underneath any signal-generation strategy, rather than more variations on entry/exit signals alone.
-
-Both are "under consideration" only - nothing here should be read as a committed Phase 2 plan.
+Not yet decided:
+- **New signal types** - moving beyond simple technical indicator crossovers/thresholds toward something with a different theoretical basis, to actually use `risk.js` against.
+- Whether/how to wire `risk.js` into `backtest.js` before or after a new strategy exists.
 
 ## Journal
+
+### 2026-08-06 (session 8)
+- Started Research Phase 2. Chose direction: build generic risk-management infrastructure before any new signal strategy, since it's useful under any future strategy and doesn't require a signal decision first (see What's Next).
+- Added `calculateATR` to `indicators.js` (Wilder-smoothed, same recurrence pattern `calculateRSI` already uses for avgGain/avgLoss), needed to support ATR-based stop-losses.
+- Built `risk.js`: standalone, long-only, not tied to any strategy.
+  - `calculatePositionSize` - sizes a position from account equity, a configurable risk-per-trade percent, and stop-loss distance; optional `maxPositionPercent` hard cap for when a very tight stop would otherwise size a position larger than the account.
+  - `calculateStopLoss` - `"percent"` and `"atr"` methods.
+  - `validateRiskReward` - rejects trades below a configurable minimum reward:risk ratio.
+  - `checkDrawdownCircuitBreaker` - flags a daily or weekly loss-threshold breach from an equity curve (same shape `backtest.js` produces), recomputed fresh from the curve's tail each call rather than kept as internal state, so the same function works in a backtest loop today and a live/paper-trading loop later without changing shape.
+  - Design decision: stayed long-only (no `direction` param) rather than supporting short positions now, since nothing in the repo shorts yet (backtest.js is long-only) and Phase 1's whole methodology was building only what's needed at each step rather than for hypothetical future requirements. Revisit if/when a short-capable strategy or live short-selling is actually built.
+- `test-risk.js`: 24 hand-constructed price/equity scenarios (no network fetch, unlike the other `test-*.js` files), covering normal sizing, the max-position cap, both stop-loss methods, valid/invalid R:R at different minimums, and the circuit breaker under a calm curve, a single-day crash, a gradual multi-day grind-down, a rising curve, and a curve too short for the weekly lookback. `test-indicators.js` got 2 new ATR checks (hand-computed constant-true-range values, and a volatility-spike reaction check in the same style as the existing EMA/WMA reaction-speed test). All 33 checks across both files pass.
+- Not done yet: `risk.js` is not wired into `backtest.js` or any strategy - `backtest.js` still invests 100% of cash on every BUY with no sizing or stop-loss. That's deliberate for now (see What's Next) - risk.js was built and tested in isolation first, same pattern Phase 1 used for indicators/strategy/backtest.
 
 ### 2026-08-02 (session 7)
 - Evidence-gathering step, prompted by the session 6 walk-forward result: EMA 20/50 crossover on AAPL stood out (80% winning windows, +6.97% avg return/window, Sharpe 0.949) but on only 5 traded windows - too small a sample to trust on its own. Built `ema-crossover-evidence.js` to gather more evidence before treating it as anything more than a candidate finding, not to confirm or debunk it.
