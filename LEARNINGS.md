@@ -45,6 +45,16 @@ This wasn't a finding about the strategy at all. It was a test-design bug: I pic
 
 Practical rule: **a test window needs to be comfortably longer than the slowest indicator's lookback period**, with enough room left over for the behavior being tested (a crossover, a threshold cross) to plausibly occur more than once or twice. For a 50-period MA, a 6-month window (~126 trading days) gives roughly 75 days of "live" indicator time after warm-up - still not huge, but workable. 3 months isn't.
 
+## 6. Risk management changes the risk, not the edge - and a naive "did it beat buy & hold" count will lie about which
+
+Wiring `risk.js` into `backtest.js` (sizing trades off 2% risk-per-trade against a stop-loss, instead of spending 100% of cash) dropped the "beats buy & hold" count on the exact same 12 Phase 1 strategy/ticker combos from 3/12 to 0/12. First instinct: risk management made things worse. That's the wrong read.
+
+Risking 2% against a 5% stop means each trade only deploys roughly 40% of account equity, not 100%. Buy & hold, by construction, is always 100% invested. Comparing a 40%-invested strategy's raw return against a 100%-invested benchmark isn't measuring anything about the trading logic - it's measuring the sizing gap. The metric that actually isolates the effect of risk management is max drawdown, and there it did exactly what it's supposed to: down 8-20 percentage points on every single one of the 12 combos. The machinery worked; the "beats B&H" scoreboard was just the wrong ruler for the job.
+
+Lesson: **when a change alters how much capital is at stake, raw-return comparisons against a fully-invested benchmark stop being meaningful, and you have to switch to a risk-adjusted or capital-normalized metric** (drawdown, Sharpe, return-per-dollar-at-risk) to tell "this got worse" apart from "this got safer and, mechanically, therefore smaller." Same trap as lesson #1 (win rate alone) one level up: a single headline number, read without the context of what else changed underneath it, produces a confident and wrong conclusion.
+
+The one place risk-adjusted return (Sharpe) *did* get consistently worse, not just mechanically smaller, was RSI mean-reversion - all three tickers' Sharpe dropped, and AAPL's win rate collapsed from 100% to 0%. A 5% stop-loss was cutting reversion trades short before the reversion had room to happen; time in market on AAPL fell from 43% to 10%, meaning most trades were getting stopped out almost immediately. That's a real signal, not a ruler problem - it just needs its own replication test before it's trusted as more than a 3-ticker, single-window observation, same caution as lesson #3 above.
+
 ## Bonus: a data bug that looked like a strategy result
 
 Separately from the above, found a real bug in the data-caching layer while building the walk-forward test: the cache tracked "what date range do we have" as a single min/max envelope, so two separately-fetched chunks with a real gap between them (2022 fetched in one session, mid-2023-onward in another) got reported as if the whole span including the gap was covered. Requests landing in that gap silently came back with 0 bars - which, fed into the backtest, produced a totally silent "0.00% return, 0 trades" row that looked exactly like a legitimate no-signal window.
