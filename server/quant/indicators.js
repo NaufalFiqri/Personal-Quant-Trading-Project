@@ -67,4 +67,28 @@ function calculateRSI(prices, period = 14) {
   return rsi;
 }
 
-module.exports = { calculateSMA, calculateEMA, calculateWMA, calculateRSI };
+function calculateATR(bars, period = 14) {
+  const atr = new Array(bars.length).fill(null);
+  if (bars.length <= period) return atr;
+
+  const trueRanges = new Array(bars.length).fill(null);
+  for (let i = 1; i < bars.length; i++) {
+    const { high, low } = bars[i];
+    const prevClose = bars[i - 1].close;
+    trueRanges[i] = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
+  }
+
+  let sum = 0;
+  for (let i = 1; i <= period; i++) sum += trueRanges[i];
+  let avgTR = sum / period;
+  atr[period] = avgTR;
+
+  for (let i = period + 1; i < bars.length; i++) {
+    avgTR = (avgTR * (period - 1) + trueRanges[i]) / period;
+    atr[i] = avgTR;
+  }
+
+  return atr;
+}
+
+module.exports = { calculateSMA, calculateEMA, calculateWMA, calculateRSI, calculateATR };

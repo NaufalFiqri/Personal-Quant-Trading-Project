@@ -1,4 +1,4 @@
-const { calculateSMA, calculateEMA, calculateWMA, calculateRSI } = require("./indicators");
+const { calculateSMA, calculateEMA, calculateWMA, calculateRSI, calculateATR } = require("./indicators");
 
 function arraysClose(a, b, tolerance = 1e-9) {
   if (a.length !== b.length) return false;
@@ -105,6 +105,42 @@ const rsiFalling = calculateRSI(falling, 14);
 const lastFalling = rsiFalling[rsiFalling.length - 1];
 console.log("RSI on falling sequence, last value:", lastFalling);
 check("RSI on falling sequence ends below 10", lastFalling < 10, lastFalling);
+
+// ATR check: hand-computed values on a series with a constant true range.
+// high/low spread of 2 and close abutting the prior bar's high each day
+// keeps TR = 2 on every bar after the first, so ATR should settle at
+// exactly 2 once the warm-up period has passed.
+const atrBars = [
+  { high: 10, low: 8, close: 9 },
+  { high: 11, low: 9, close: 10 },
+  { high: 12, low: 10, close: 11 },
+  { high: 13, low: 11, close: 12 },
+  { high: 14, low: 12, close: 13 },
+];
+const atrResult = calculateATR(atrBars, 3);
+console.log("ATR(3) on constant-true-range bars:", atrResult);
+check(
+  "ATR(3) matches expected [null,null,null,2,2]",
+  arraysClose(atrResult, [null, null, null, 2, 2]),
+  atrResult
+);
+
+// ATR reaction to a volatility spike: 20 quiet bars (small true range),
+// one wide-range bar, then a few more quiet bars. ATR should be
+// noticeably higher right after the spike than right before it.
+const quietBars = Array.from({ length: 20 }, () => ({ high: 101, low: 99, close: 100 }));
+const spikeBar = { high: 120, low: 90, close: 105 };
+const postSpikeBars = Array.from({ length: 5 }, () => ({ high: 106, low: 104, close: 105 }));
+const volatilityBars = [...quietBars, spikeBar, ...postSpikeBars];
+const volatilityATR = calculateATR(volatilityBars, 14);
+
+const atrBeforeSpike = volatilityATR[quietBars.length - 1];
+const atrAfterSpike = volatilityATR[volatilityBars.length - 1];
+console.log(`\nATR before spike: ${atrBeforeSpike.toFixed(2)}, after spike: ${atrAfterSpike.toFixed(2)}`);
+check("ATR rises after a volatility spike", atrAfterSpike > atrBeforeSpike, {
+  atrBeforeSpike,
+  atrAfterSpike,
+});
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
