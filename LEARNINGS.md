@@ -55,6 +55,67 @@ Lesson: **when a change alters how much capital is at stake, raw-return comparis
 
 The one place risk-adjusted return (Sharpe) *did* get consistently worse, not just mechanically smaller, was RSI mean-reversion - all three tickers' Sharpe dropped, and AAPL's win rate collapsed from 100% to 0%. A 5% stop-loss was cutting reversion trades short before the reversion had room to happen; time in market on AAPL fell from 43% to 10%, meaning most trades were getting stopped out almost immediately. That's a real signal, not a ruler problem - it just needs its own replication test before it's trusted as more than a 3-ticker, single-window observation, same caution as lesson #3 above.
 
+## 7. Widening or volatility-adjusting the stop narrows RSI's Sharpe damage but doesn't undo it - this looks like a structural mismatch, not a tuning bug
+
+Direct follow-up to lesson #6's RSI finding: if a 5% stop was "too tight," would a wider or volatility-adjusted stop fix it? Re-ran RSI 14 (30/70) on AAPL/MSFT/JNJ (same 3-year window) five ways - no risk management (baseline), the default 5% percent stop, 8% percent, 10% percent, and ATR-based (`DEFAULT_RISK_CONFIG`'s untouched defaults: 14-period, 2x multiplier) - keeping the crossover strategies and every other setting fixed.
+
+Average Sharpe across the three tickers:
+
+| Variant | Avg Sharpe | Avg Max DD % | Avg Win Rate % |
+|---|---|---|---|
+| No risk management (baseline) | 0.551 | 22.98 | 80.56 |
+| 5% percent stop (current default) | -0.106 | 7.14 | 19.44 |
+| 8% percent stop | 0.118 | 5.34 | 38.89 |
+| 10% percent stop | 0.337 | 3.85 | 58.33 |
+| ATR stop (default period/multiplier) | -0.507 | 7.67 | 11.11 |
+
+Widening the percent stop helps, monotonically - but even the widest one tested (10%) only recovers about 60% of the Sharpe gap back to baseline, not all of it. The average also hides a worse per-ticker story: AAPL's Sharpe is *negative at every stop width tested* (-0.673, 0.033, -0.066 at 5/8/10%) and never gets back to its 0.420 baseline; JNJ is similar (0.489 baseline vs -0.297, -0.178, 0.216). Only MSFT tolerates stops well across the board (0.745 baseline vs 0.653/0.500/0.862) - one out of three tickers recovering isn't enough to call the fix general.
+
+The ATR-based stop - the "obvious" volatility-adjusted fix the original hypothesis pointed at - was the *worst* performer of the five, not the best (JNJ alone cratered to -1.492 Sharpe with a 0% win rate). At its default 2x-ATR multiplier, the ATR stop landed tighter than even the 5% percent stop for these particular RSI trades, doing more damage instead of less. That doesn't rule out ATR-based stops for mean-reversion in general - a wider multiplier might behave completely differently, and that's an untested knob, not a closed question - but it does rule out "just switch to ATR" as an automatic fix; the multiplier needs its own tuning pass to mean anything, which is a separate investigation from this one.
+
+Max drawdown kept improving as the percent stop widened (22.98% -> 7.14% -> 5.34% -> 3.85%) - counterintuitively, the *widest* stop produced the *smallest* observed drawdown of any risk-managed variant. This isn't the stop mechanically capping losses tighter; it's a path-dependency effect - a different stop width changes which trades close when, which changes what the strategy re-enters afterward, and this particular sequence of trades happened to have a shallower drawdown at 10%. Read as "this run's result," not "wider stops are safer" as a general rule - the opposite could easily be true on a different ticker or window.
+
+**Conclusion: no configuration tested (5%, 8%, 10% percent, or default-parameter ATR) restores RSI mean-reversion's Sharpe ratio to its no-risk-management baseline while keeping the drawdown benefit.** The closest (10% percent) still leaves two of three tickers meaningfully degraded. This looks less like "the stop was mistuned" and more like a structural mismatch: this RSI strategy's edge is already thin (per lesson #1 - high win rate, small average win), and it seems to depend on being able to sit through a temporary adverse move without being cut out - which is exactly what any hard price-based stop works against by definition. **Rule to carry forward: "add a stop-loss" is not a strictly-good default to apply uniformly to every strategy.** A mean-reversion signal may need a fundamentally different protection mechanism (a time-based exit, or leaning on position sizing alone rather than a price stop) instead of a wider or smarter price stop. Trend-following crossover strategies (SMA/EMA/WMA, per lesson #6) didn't show this problem - the mismatch tracks the strategy's own trade logic, not stop-losses in general.
+
+### Addendum: why AAPL/JNJ and not MSFT?
+
+Follow-up read-only analysis (no new strategy/backtest runs - reused the same unmodified no-risk-management baseline already behind the table above, plus new volatility stats computed directly from cached price data) to explain the per-ticker split. Two candidate explanations were checked and ruled out before finding the one that actually fits.
+
+**Trade frequency: ruled out.** The baseline produced 3 round trips for AAPL, 3 for MSFT, 4 for JNJ over the 3-year window (~1-1.3/year each) - similar order of magnitude across all three. Small-N amplifies noise for any of them equally; it doesn't explain why two tickers degraded and one didn't.
+
+**Raw volatility: ruled out.** Daily return stdev and average ATR(14)-as-%-of-price:
+
+| Ticker | Daily return stdev | Avg ATR(14) % of price |
+|---|---|---|
+| AAPL | 1.692% | 2.17% |
+| MSFT | 1.643% | 2.03% |
+| JNJ | 1.125% | 1.61% |
+
+If raw volatility were the driver, JNJ (the *least* volatile of the three) should have tolerated a fixed stop the *best*, not degraded alongside AAPL. The volatility ranking (AAPL > MSFT > JNJ) doesn't track the degradation pattern (AAPL bad, JNJ bad, MSFT fine) at all - so overall volatility level isn't the explanatory variable.
+
+**What actually explains it: each baseline trade's own max adverse excursion (MAE) - how far the trade dipped underwater before recovering - relative to the stop widths tested.**
+
+| Ticker | Round trip (entry -> exit) | Holding days | MAE % | Return % | Won? |
+|---|---|---|---|---|---|
+| AAPL | 2024-01-08 -> 2024-05-22 | 94 | 11.62 | 2.77 | WON |
+| AAPL | 2025-01-22 -> 2025-08-11 | 138 | 24.44 | 1.40 | WON |
+| AAPL | 2026-01-13 -> 2026-06-01 | 95 | 6.80 | 17.22 | WON |
+| MSFT | 2024-08-08 -> 2024-12-18 | 92 | 0.73 | 8.51 | WON |
+| MSFT | 2025-04-09 -> 2025-05-23 | 31 | 9.62 | 15.17 | WON |
+| MSFT | 2025-11-25 -> 2026-04-20 | 98 | 25.34 | -12.44 | lost |
+| JNJ | 2023-09-11 -> 2023-12-05 | 60 | 10.93 | -2.62 | lost |
+| JNJ | 2024-04-09 -> 2024-07-18 | 69 | 6.06 | 1.95 | WON |
+| JNJ | 2024-11-15 -> 2025-02-26 | 67 | 8.70 | 5.79 | WON |
+| JNJ | 2026-04-23 -> 2026-06-30 | 46 | 4.50 | 10.00 | WON |
+
+**AAPL: every single winning trade needed a deeper drawdown than every stop width tested.** All three round trips have MAE (6.80%, 11.62%, 24.44%) at or above the 5% stop, and two of three exceed even the 10% stop. There's no stop width in the tested range that would have let any of AAPL's baseline winners survive to their natural exit - which is exactly why AAPL's win rate went to 0% at 5% and stayed weak all the way to 10%. This isn't a mistuned width; none of the tested widths were in the right range for these specific trades.
+
+**MSFT: the opposite pattern by coincidence.** Two of its three trades had shallow MAE (0.73%, 9.62%) that a 5-10% stop mostly survives, and its *one* deep-MAE trade (25.34%) was already the baseline's only *loser* - a stop cutting that one short early is the stop-loss doing its job, not sabotaging a winner. That's why MSFT tolerated stops well and occasionally beat its own baseline Sharpe (0.862 at the 10% stop vs. 0.745 baseline).
+
+**JNJ: in between, and this is where the ATR result gets explained.** Three of JNJ's four trades have MAE under 9% (4.50%, 6.06%, 8.70%), which is why its Sharpe partially recovered as the percent stop widened toward 10%. But JNJ's ATR-based Sharpe (-1.492) was worse than every percent width, including 5% - and the MAE table alone doesn't explain that. The real cause is the ATR stop distance itself: at the default 2x multiplier, `stopLossPercent`-equivalent distance is roughly `2 x avg ATR%` - AAPL ~4.34%, MSFT ~4.06%, **JNJ ~3.22%**. All three are *tighter* than the "already too tight" 5% fixed stop from the main table, and JNJ's is the tightest of the three because JNJ had the lowest ATR% to begin with. The ATR stop wasn't a looser, volatility-adjusted version of the percent stop here - it was a stealthily tighter one, worst on the ticker with the least volatility to build a wider distance from. That's the mechanism, not a new/separate mismatch.
+
+**Answer to the original question: it's neither trade frequency nor raw volatility level - it's whether each ticker's specific reversion trades needed room to draw down beyond whatever stop width was in play, on a trade-by-trade basis.** AAPL's trades structurally needed more room than any width tested gave them. MSFT's trades mostly didn't need much room, so stops were nearly free insurance. JNJ sat in between on the percent stops but got hit by a second, independent problem on the ATR stop: the default multiplier produces a *tighter* stop on lower-ATR%-of-price tickers, not a properly volatility-scaled one. Practical implication for any future ATR-based stop: check the resulting stop distance in percent-of-price terms against what's actually being replaced, rather than assuming "ATR-based" automatically means "wider" or "better adapted."
+
 ## Bonus: a data bug that looked like a strategy result
 
 Separately from the above, found a real bug in the data-caching layer while building the walk-forward test: the cache tracked "what date range do we have" as a single min/max envelope, so two separately-fetched chunks with a real gap between them (2022 fetched in one session, mid-2023-onward in another) got reported as if the whole span including the gap was covered. Requests landing in that gap silently came back with 0 bars - which, fed into the backtest, produced a totally silent "0.00% return, 0 trades" row that looked exactly like a legitimate no-signal window.
