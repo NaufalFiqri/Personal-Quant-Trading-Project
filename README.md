@@ -117,6 +117,11 @@ Not yet decided:
 - **New signal types** - moving beyond simple technical indicator crossovers/thresholds toward something with a different theoretical basis, to actually use `risk.js` against.
 - Whether an ATR stop with a wider multiplier (untested - only the default 2x was tried) or a non-price-based exit (time-based, position-size-only) would fix the RSI mismatch, or whether it's not worth pursuing further given RSI's edge was already thin in Phase 1.
 
+## Paper Trade Journal
+
+| Date | Instrument | Thesis | Entry | Stop | Target | Outcome | What I'd change |
+|---|---|---|---|---|---|---|---|
+
 ## Journal
 
 ### 2026-08-10 (session 13)

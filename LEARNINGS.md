@@ -157,3 +157,44 @@ Separately from the above, found a real bug in the data-caching layer while buil
 Two lessons stacked here:
 - **A bug in the data layer can masquerade as a finding in the strategy layer.** Zero trades in a window could mean "the strategy legitimately didn't fire" or "there's no data here" - from the output alone, they're indistinguishable. Had to go check the raw bar count for that window specifically to find this.
 - This is also *why* the zero-trade-window exclusion bug (see README Journal, session 6) was worth taking seriously as a category, not a one-off: any time "the strategy did nothing" gets folded into an aggregate the same way as "the strategy did something and it happened to be flat," the aggregate stops meaning what it looks like it means. Two different bugs, same root shape of mistake.
+
+## Discretionary Trading Lessons
+
+Separate track from the quant research lessons above - concepts learned for manual/discretionary trading, following the same "lesson + why it matters" format.
+
+### Lesson 1: Position Sizing
+Risk % of account is the one constant - it never changes. Position size, trade count, and whether to take a trade at all flex around it, never the other way around.
+Formula: `Position Size = (Account Equity × Risk %) / (Entry Price − Stop-Loss Price)`
+If the calculated size rounds to 0 shares, skip the trade - don't force it by rounding up. Rounding down is always the safe direction (actual risk ends up slightly under target, never over).
+
+### Lesson 2: Stop-Loss Placement
+Stop-loss = the price where the original trade thesis is actually invalidated, not "wherever feels safe."
+- **Fixed percentage**: simple, but ignores the instrument's actual volatility.
+- **ATR-based**: adapts to real volatility (wider stop on volatile instruments, tighter on calm ones) - generally the better default.
+Critical sequencing: the stop-loss is decided **first** (based on where the thesis breaks), and position size is calculated **second**, off that stop distance. Never reverse-engineer the stop to make the position size formula give a nicer number.
+
+### Lesson 3: Risk-Reward Ratio (R:R)
+`R:R = (Target − Entry) / (Entry − Stop-Loss)`
+Breakeven win rate = `1 / (1 + R:R)`. At 1:1.5 R:R, only a 40% win rate is needed to break even - meaning win rate alone is meaningless without knowing the R:R it's paired with.
+A trade with a great setup but poor R:R (risking more than the potential gain) should be rejected outright, same as Lesson 1's rule that a 0-share position means skip, not override.
+
+### Lesson 4: Max Drawdown Circuit Breaker
+Protects across a *losing streak*, not just per-trade (unlike Lessons 1-3). If drawdown exceeds a set threshold (e.g. 8% daily), halt all new trades immediately.
+Correct sequence when it fires: **stop trading → diagnose why (normal variance vs. something structurally broken) → only resume once you know which.**
+The wrong response is jumping to a *different* trade or strategy without diagnosing first - that's the same "override the rule when it's inconvenient" mistake as Lesson 1, just dressed up as being proactive.
+
+### Lesson 5: Market Structure - Trends
+Uptrend = higher highs + higher lows (HH/HL). Downtrend = lower highs + lower lows (LH/LL). Range = no clear progression, price oscillates between a ceiling and floor.
+A trend isn't broken by a normal pullback - it's broken the first time a low undercuts the *previous* higher low (uptrend) or a high fails to exceed the previous lower high (downtrend). That single moment is often the earliest real warning sign, ahead of any indicator confirming it.
+
+### Lesson 6: Support & Resistance
+Support = a level where buying pressure has historically stopped declines. Resistance = a level where selling pressure has historically capped rallies.
+**Role reversal**: once resistance breaks, it often becomes support going forward (and vice versa for support breaking).
+These levels are zones, not exact prices - markets often wick slightly through a level before reversing (stop-hunting/liquidity grabs), so stops are placed a bit *beyond* the level, not precisely on it.
+Directly connects to Lesson 2: the stop-loss should sit just beyond a support/resistance zone, since that's the actual invalidation point for a trade built around that level holding.
+
+### Lesson 7: Volume Confirmation
+Price shows *what* happened; volume shows *how convincing* it was.
+- **Breakout confirmation**: a breakout on high volume is more likely to hold; on low volume it's a common "false breakout" trap.
+- **Trend health**: volume should expand on up-moves and contract on pullbacks in a healthy uptrend. Volume drying up on new highs (price up, volume down) is an early warning sign the trend is losing steam - often visible before any structure break.
+- **Reversal signals**: a sharp move on unusually high volume after an extended trend can signal exhaustion (a "climax") rather than continuation.
