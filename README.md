@@ -119,7 +119,7 @@ Not yet decided:
 
 ## Paper Trade Journal
 
-| Date | Instrument | Thesis | Entry | Stop | Target | Outcome | What I'd change |
+| Date (DD-MM-YYYY) | Instrument | Thesis | Entry | Stop | Target | Outcome | What I'd change |
 | 12-8-2026 | AAPL | 	Pullback to former resistance (~305, June breakout level) now acting as support, within intact Apr–Aug uptrend structure. No alarming volume on the pullback. Post-earnings volatility elevated (ATR ~9 vs ~6 pre-earnings), so stop sized off ATR rather than fixed %. | ~305 | 	287.38 (2x ATR below entry, between calm consolidation floor ~295-300 and earnings-drop low ~280-283) | 340 (prior all-time high — flagged as possible resistance itself, not fully vetted) | Open | - |
 |---|---|---|---|---|---|---|---|
 
