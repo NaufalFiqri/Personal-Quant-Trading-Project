@@ -76,4 +76,20 @@ function rsiMeanReversionStrategy(
   return signals;
 }
 
-module.exports = { smaCrossoverStrategy, maCrossoverStrategy, rsiMeanReversionStrategy };
+// Regime gate: drops BUY signals falling on an unfavorable-regime bar (per
+// calculateRegime in regime.js), passing SELL signals through untouched so
+// an already-open position keeps running its normal exit logic regardless
+// of regime. Generic over the inner strategy - works on any signal list,
+// not just maCrossoverStrategy's. A bar with no regime entry (or a null
+// favorable, e.g. still in the regime MA's warm-up) is treated the same as
+// unfavorable: block the entry rather than assume it's safe.
+function applyRegimeFilter(signals, regime) {
+  const favorableByDate = new Map(regime.map((r) => [r.date, r.favorable]));
+
+  return signals.filter((signal) => {
+    if (signal.action !== "BUY") return true;
+    return favorableByDate.get(signal.date) === true;
+  });
+}
+
+module.exports = { smaCrossoverStrategy, maCrossoverStrategy, rsiMeanReversionStrategy, applyRegimeFilter };
