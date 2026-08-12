@@ -41,14 +41,27 @@ function buildWindows(startDate, endDate, windowMonths, minWindowMonths) {
 // each sequential window, so results show whether behavior holds up across
 // many different real periods rather than looking good in one chosen range.
 async function runWalkForward(ticker, strategyFn, strategyParams, options = {}) {
-  const { startDate, endDate, windowMonths = 6, minWindowMonths = 3 } = options;
+  const { startDate, endDate, windowMonths = 6, minWindowMonths = 3, lookbackMonths = 0 } = options;
 
   const windows = buildWindows(startDate, endDate, windowMonths, minWindowMonths);
   const windowResults = [];
 
   for (const { windowStart, windowEnd } of windows) {
-    const bars = await getHistoricalData(ticker, windowStart, windowEnd);
-    const signals = strategyFn(bars, strategyParams);
+    // An optional lookback buffer fetched before windowStart lets an
+    // indicator with its own warm-up period (e.g. a 200-period regime
+    // filter) enter the window already warmed up from real history, instead
+    // of re-warming from scratch inside every window - which would eat a
+    // large fraction of a typical window's own length. Bars/signals are
+    // filtered back down to the window itself before backtesting - the
+    // lookback period exists only to prime indicators, never to trade.
+    // Default 0 preserves the exact original behavior for existing callers.
+    const fetchStart = lookbackMonths > 0 ? addMonths(windowStart, -lookbackMonths) : windowStart;
+    const fetchedBars = await getHistoricalData(ticker, fetchStart, windowEnd);
+    const fetchedSignals = strategyFn(fetchedBars, strategyParams);
+
+    const bars = lookbackMonths > 0 ? fetchedBars.filter((b) => b.date >= windowStart) : fetchedBars;
+    const signals = lookbackMonths > 0 ? fetchedSignals.filter((s) => s.date >= windowStart) : fetchedSignals;
+
     const backtest = runBacktest(bars, signals, {
       initialCapital: 10000,
       feePercent: 0.001,
@@ -62,6 +75,8 @@ async function runWalkForward(ticker, strategyFn, strategyParams, options = {}) 
       windowEnd,
       returnPercent: backtest.totalReturnPercent,
       buyAndHoldPercent: backtest.buyAndHoldReturnPercent,
+      maxDrawdownPercent: backtest.maxDrawdownPercent,
+      winRate: backtest.winRate,
       // A 0-trade window means the strategy never fired, not that it made
       // a defensive decision to sit out - beatBenchmark is only meaningful
       // when the strategy actually did something, so it's null here rather
@@ -95,6 +110,12 @@ async function runWalkForward(ticker, strategyFn, strategyParams, options = {}) 
   const averageSharpe = n > 0
     ? tradedWindows.reduce((sum, w) => sum + w.sharpeRatio, 0) / n
     : 0;
+  const averageMaxDrawdownPercent = n > 0
+    ? tradedWindows.reduce((sum, w) => sum + w.maxDrawdownPercent, 0) / n
+    : 0;
+  const averageWinRate = n > 0
+    ? tradedWindows.reduce((sum, w) => sum + w.winRate, 0) / n
+    : 0;
 
   // Consistency score: standard deviation of per-window returns among
   // windows where the strategy actually traded. Lower means the strategy's
@@ -113,6 +134,8 @@ async function runWalkForward(ticker, strategyFn, strategyParams, options = {}) 
       winningWindowsPercent,
       averageReturnPercent,
       averageSharpe,
+      averageMaxDrawdownPercent,
+      averageWinRate,
       consistencyScore,
     },
   };
