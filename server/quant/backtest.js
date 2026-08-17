@@ -120,6 +120,13 @@ function runBacktest(bars, signals, options = {}) {
             stopLossPrice = stopPrice;
 
             trades.push({
+              // Spread first so any extra fields a strategy attaches to its
+              // own signal (e.g. volumeBreakoutStrategy's breakoutMarginPercent/
+              // volumeRatio) carry through to the trade log unchanged - the
+              // explicit fields below override date/action/price with the
+              // actual fill values, everything else on the signal passes
+              // through as-is.
+              ...signal,
               date: bar.date,
               action: "BUY",
               price: adjustedPrice,

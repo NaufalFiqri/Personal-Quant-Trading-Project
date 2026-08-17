@@ -41,7 +41,7 @@ function buildWindows(startDate, endDate, windowMonths, minWindowMonths) {
 // each sequential window, so results show whether behavior holds up across
 // many different real periods rather than looking good in one chosen range.
 async function runWalkForward(ticker, strategyFn, strategyParams, options = {}) {
-  const { startDate, endDate, windowMonths = 6, minWindowMonths = 3, lookbackMonths = 0 } = options;
+  const { startDate, endDate, windowMonths = 6, minWindowMonths = 3, lookbackMonths = 0, riskConfig } = options;
 
   const windows = buildWindows(startDate, endDate, windowMonths, minWindowMonths);
   const windowResults = [];
@@ -66,6 +66,10 @@ async function runWalkForward(ticker, strategyFn, strategyParams, options = {}) 
       initialCapital: 10000,
       feePercent: 0.001,
       slippagePercent: 0.0005,
+      // Optional, passed straight through to runBacktest - undefined by
+      // default, which falls back to backtest.js's own DEFAULT_RISK_CONFIG,
+      // same as every existing caller already gets.
+      ...(riskConfig ? { riskConfig } : {}),
     });
 
     const hasSignal = backtest.numberOfTrades > 0;
@@ -88,6 +92,13 @@ async function runWalkForward(ticker, strategyFn, strategyParams, options = {}) 
       hasSignal,
       sharpeRatio: backtest.sharpeRatio,
       trades: backtest.numberOfTrades,
+      // Full per-trade record for this window (entries carry through
+      // whatever extra fields the strategy attached to its own signals, e.g.
+      // volumeBreakoutStrategy's breakoutMarginPercent/volumeRatio - see
+      // backtest.js) - kept separate from `trades` above (a plain count)
+      // rather than replacing it, so existing callers that sum/print that
+      // count are unaffected.
+      tradeLog: backtest.trades,
     });
   }
 
