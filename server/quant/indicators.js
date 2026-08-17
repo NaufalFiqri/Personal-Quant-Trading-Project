@@ -91,4 +91,36 @@ function calculateATR(bars, period = 14) {
   return atr;
 }
 
-module.exports = { calculateSMA, calculateEMA, calculateWMA, calculateRSI, calculateATR };
+function calculateRollingMax(values, period) {
+  const rollingMax = new Array(values.length).fill(null);
+  for (let i = period - 1; i < values.length; i++) {
+    let max = -Infinity;
+    for (let j = i - period + 1; j <= i; j++) {
+      if (values[j] > max) max = values[j];
+    }
+    rollingMax[i] = max;
+  }
+  return rollingMax;
+}
+
+function calculateRollingMin(values, period) {
+  const rollingMin = new Array(values.length).fill(null);
+  for (let i = period - 1; i < values.length; i++) {
+    let min = Infinity;
+    for (let j = i - period + 1; j <= i; j++) {
+      if (values[j] < min) min = values[j];
+    }
+    rollingMin[i] = min;
+  }
+  return rollingMin;
+}
+
+module.exports = {
+  calculateSMA,
+  calculateEMA,
+  calculateWMA,
+  calculateRSI,
+  calculateATR,
+  calculateRollingMax,
+  calculateRollingMin,
+};

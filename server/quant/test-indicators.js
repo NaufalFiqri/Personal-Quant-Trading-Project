@@ -1,4 +1,12 @@
-const { calculateSMA, calculateEMA, calculateWMA, calculateRSI, calculateATR } = require("./indicators");
+const {
+  calculateSMA,
+  calculateEMA,
+  calculateWMA,
+  calculateRSI,
+  calculateATR,
+  calculateRollingMax,
+  calculateRollingMin,
+} = require("./indicators");
 
 function arraysClose(a, b, tolerance = 1e-9) {
   if (a.length !== b.length) return false;
@@ -141,6 +149,48 @@ check("ATR rises after a volatility spike", atrAfterSpike > atrBeforeSpike, {
   atrBeforeSpike,
   atrAfterSpike,
 });
+
+// Rolling max/min: hand-computed values, same windowing convention as SMA
+// (inclusive of the current index - rollingMax[i] covers values[i-period+1..i]).
+const rollingMaxResult = calculateRollingMax([5, 3, 8, 2, 9, 1], 3);
+console.log("RollingMax(3) on [5,3,8,2,9,1]:", rollingMaxResult);
+check(
+  "RollingMax(3) matches expected [null,null,8,8,9,9]",
+  arraysClose(rollingMaxResult, [null, null, 8, 8, 9, 9]),
+  rollingMaxResult
+);
+
+const rollingMinResult = calculateRollingMin([5, 3, 8, 2, 9, 1], 3);
+console.log("RollingMin(3) on [5,3,8,2,9,1]:", rollingMinResult);
+check(
+  "RollingMin(3) matches expected [null,null,3,2,2,1]",
+  arraysClose(rollingMinResult, [null, null, 3, 2, 2, 1]),
+  rollingMinResult
+);
+
+// Boundary case this indicator exists to make explicit: rollingMax is
+// inclusive of "today", so a bar with an unusually high high shows up in
+// its own window's max - it would "break out" against itself if a strategy
+// compared close[i] to rollingMax[i] directly. This is exactly why
+// volumeBreakoutStrategy in strategy.js compares against rollingMax[i-1]
+// (yesterday's channel) instead. Demonstrated here at the indicator level:
+// a lone spike at the final bar shows up as that same bar's own rollingMax.
+const spikeHighs = [...Array(10).fill(100), 150];
+const spikeRollingMax = calculateRollingMax(spikeHighs, 5);
+const todayIndex = spikeHighs.length - 1;
+console.log(
+  `\nToday-can't-break-own-high check: today's high=${spikeHighs[todayIndex]}, rollingMax(5) at today's own index=${spikeRollingMax[todayIndex]}`
+);
+check(
+  "rollingMax at today's index includes today's own spike (proves comparing close[i] to rollingMax[i] would be circular)",
+  spikeRollingMax[todayIndex] === spikeHighs[todayIndex],
+  spikeRollingMax
+);
+check(
+  "rollingMax at yesterday's index does NOT include today's spike",
+  spikeRollingMax[todayIndex - 1] === 100,
+  spikeRollingMax
+);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

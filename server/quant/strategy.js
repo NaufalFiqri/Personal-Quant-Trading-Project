@@ -1,4 +1,11 @@
-const { calculateSMA, calculateEMA, calculateWMA, calculateRSI } = require("./indicators");
+const {
+  calculateSMA,
+  calculateEMA,
+  calculateWMA,
+  calculateRSI,
+  calculateRollingMax,
+  calculateRollingMin,
+} = require("./indicators");
 
 const MA_FUNCTIONS = {
   sma: calculateSMA,
@@ -76,6 +83,65 @@ function rsiMeanReversionStrategy(
   return signals;
 }
 
+// Breakout entry, confirmed by volume, with its own trend-following exit
+// (asymmetric Turtle-style channel: a shorter exit window than entry window
+// lets a working breakout run while cutting a failed one reasonably fast).
+// Entry compares against yesterday's rolling high (rollingHigh[i-1]), not
+// today's (rollingHigh[i]) - rollingHigh's window is inclusive of the
+// current bar (same convention as calculateSMA), so today's own high is
+// part of today's rollingHigh[i] value - comparing close[i] to rollingHigh[i]
+// directly would let a bar break out against itself. See test-indicators.js
+// for a direct demonstration of that. The exit's rollingLow[i-1] is the same
+// reasoning applied to the exit side.
+function volumeBreakoutStrategy(
+  bars,
+  { breakoutPeriod = 20, volumePeriod = 20, volumeMultiplier = 1.5, exitPeriod = 10 } = {}
+) {
+  const highs = bars.map((b) => b.high);
+  const lows = bars.map((b) => b.low);
+  const volumes = bars.map((b) => b.volume);
+
+  const rollingHigh = calculateRollingMax(highs, breakoutPeriod);
+  const rollingLow = calculateRollingMin(lows, exitPeriod);
+  const avgVolume = calculateSMA(volumes, volumePeriod);
+
+  const signals = [];
+  let inPosition = false;
+
+  for (let i = 1; i < bars.length; i++) {
+    if (rollingHigh[i - 1] == null || avgVolume[i] == null || rollingLow[i - 1] == null) {
+      continue;
+    }
+
+    if (!inPosition) {
+      const priorHigh = rollingHigh[i - 1];
+      const requiredVolume = avgVolume[i] * volumeMultiplier;
+      const isBreakout = bars[i].close > priorHigh;
+      const isVolumeConfirmed = bars[i].volume > requiredVolume;
+
+      if (isBreakout && isVolumeConfirmed) {
+        signals.push({
+          date: bars[i].date,
+          action: "BUY",
+          price: bars[i].close,
+          // How far above the prior N-day high the close cleared it, and how
+          // many multiples of the confirmation threshold (not just the raw
+          // average) the actual volume was - carried through to backtest.js's
+          // trade log so it's queryable per-trade, not just visible here.
+          breakoutMarginPercent: ((bars[i].close - priorHigh) / priorHigh) * 100,
+          volumeRatio: bars[i].volume / requiredVolume,
+        });
+        inPosition = true;
+      }
+    } else if (bars[i].close < rollingLow[i - 1]) {
+      signals.push({ date: bars[i].date, action: "SELL", price: bars[i].close });
+      inPosition = false;
+    }
+  }
+
+  return signals;
+}
+
 // Regime gate: drops BUY signals falling on an unfavorable-regime bar (per
 // calculateRegime in regime.js), passing SELL signals through untouched so
 // an already-open position keeps running its normal exit logic regardless
@@ -92,4 +158,10 @@ function applyRegimeFilter(signals, regime) {
   });
 }
 
-module.exports = { smaCrossoverStrategy, maCrossoverStrategy, rsiMeanReversionStrategy, applyRegimeFilter };
+module.exports = {
+  smaCrossoverStrategy,
+  maCrossoverStrategy,
+  rsiMeanReversionStrategy,
+  volumeBreakoutStrategy,
+  applyRegimeFilter,
+};
