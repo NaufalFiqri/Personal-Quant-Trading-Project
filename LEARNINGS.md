@@ -182,6 +182,38 @@ Two lessons stacked here:
 - **A bug in the data layer can masquerade as a finding in the strategy layer.** Zero trades in a window could mean "the strategy legitimately didn't fire" or "there's no data here" - from the output alone, they're indistinguishable. Had to go check the raw bar count for that window specifically to find this.
 - This is also *why* the zero-trade-window exclusion bug (see README Journal, session 6) was worth taking seriously as a category, not a one-off: any time "the strategy did nothing" gets folded into an aggregate the same way as "the strategy did something and it happened to be flat," the aggregate stops meaning what it looks like it means. Two different bugs, same root shape of mistake.
 
+## 10. Volume-confirmed breakout shows no edge over a random-entry baseline once risk management is held constant
+
+Phase 2 candidate #1 (`volumeBreakoutStrategy`: rolling-high breakout + volume confirmation entry, 10-day-low Turtle-style exit, ATR stop-loss via `risk.js`) tested two ways on the same 7-ticker set used throughout this project (AAPL, MSFT, JNJ, GOOGL, AMZN, NVDA, META), 18-month walk-forward windows, `lookbackMonths: 2`, `riskConfig: { stopLossMethod: "atr" }` - both runs using the now-fixed lookback-aware ATR warm-up (see process note below).
+
+**Against buy & hold** (`volume-breakout-vs-bh.js`): the strategy beat B&H in exactly 7 of 21 windows, and all 7 of those wins landed in windows where B&H itself was negative (range -3.51% to -23.50%) - never in a positive-B&H window, including two extreme rising-market windows where B&H returned +216.62% (NVDA, 2023-07 to 2025-01) and +104.71% (META, 2023-07 to 2025-01) and the strategy still lost to it. The strategy isn't capturing upside faster than holding - it's losing less badly than holding when holding itself was a bad idea.
+
+**Against a random-entry baseline with identical everything else** (`volume-breakout-vs-random.js`; `randomEntryStrategy` in `strategy.js` - a seeded 2%-per-eligible-bar coin-flip entry, same Turtle-style exit, same ATR stop wrapper, matched to land in the same 3-10-trades-per-window range the real strategy produces): real beat random in 11 of 21 head-to-head windows (~52%, close to a coin flip), and random entries beat B&H in 8 of 21 windows - slightly *more often* than the real strategy's own 7 of 21. **A random entry timer, wrapped in the same risk management, did marginally better against the benchmark than the strategy's actual entry logic did.**
+
+The per-ticker breakdown of real-vs-random is not uniform - and it's worth being precise about it rather than eyeballing the table, since real total advantage came almost entirely from one ticker:
+
+| Ticker | Real beat random | 
+|---|---|
+| AAPL | 3/3 |
+| MSFT | 2/3 |
+| GOOGL | 2/3 |
+| NVDA | 2/3 |
+| JNJ | 1/3 |
+| META | 1/3 |
+| AMZN | 0/3 |
+
+AAPL is the one clean case where real's entry logic clearly beat random on every window tested. AMZN is the mirror opposite - random beat real on all 3 windows there. The other five tickers split close to even. This is the same shape of result as lesson #3's AAPL standout: a strong single-ticker result inside an aggregate that doesn't replicate across the other 6 - except here the "standout" is real-vs-random, not strategy-vs-benchmark, and it still doesn't generalize.
+
+**Conclusion: no robust edge demonstrated for volume-confirmed breakout in this dataset.** This lands in the same place as Phase 1's original finding for the indicator-family strategies (lesson #3/#4: results that look real in aggregate don't survive replication) - but for a different underlying reason. Lesson #7's RSI finding was a *strategy-shape-vs-risk-control* mismatch (a real, structural edge undermined by the wrong kind of stop). This is not that: the risk management here is identical between the real and random runs, so what's being tested head-to-head is the entry signal alone, and the entry signal isn't clearly distinguishable from randomly-timed entries once everything else is held fixed. **Rule to carry forward, alongside lesson #3's: a strategy's "beats buy & hold" count is not evidence of a real entry-timing edge by itself - it has to be checked against a random-entry baseline under the identical risk wrapper before crediting the entry logic specifically, the same way lesson #6 required checking capital-at-stake before crediting a return-comparison to the strategy at all.**
+
+### Process note: this session required raw-output verification at every step, and that should be standing practice going forward
+
+Earlier in the session that produced this lesson, three things were reported as completed and verified before any of them were actually checked against the repository: a claimed fix for an ATR stop-loss lookback gap (a `warmupBars` parameter alleged to already exist in `backtest.js`), a full random-entry-vs-real comparison table, and a per-window buy & hold breakdown for the volume breakout strategy. Direct inspection - `git show` on the commit alleged to contain the fix, `git grep`/`git log -S` across the full history for both `warmupBars` and `randomEntryStrategy`, and reading the actual output shape of `volume-breakout-validation.js` - found none of the three existed in any form, committed or not. The `warmupBars` fix was only real once actually implemented and diff'd in this session; `randomEntryStrategy` and the B&H-comparison scripts likewise didn't exist until written and run in this session (see lesson #10 above, and the process that produced it).
+
+Every result trusted afterward in this investigation - the fix's before/after behavior, the B&H table, the real-vs-random table - was only accepted after being produced by a command actually run in this session, with its complete unedited stdout inspected, not summarized or described in advance. That discipline is the reason lesson #10 above is trustworthy where the earlier, unverified claims were not.
+
+**This is a standing practice going forward, not a one-off correction for this session:** any reported result - a fix, a comparison, a table, a "this already works" - gets treated as unverified until the actual command has been run and its raw output inspected directly. "I checked and it's already there" is not itself verification.
+
 ## Discretionary Trading Lessons
 
 Separate track from the quant research lessons above - concepts learned for manual/discretionary trading, following the same "lesson + why it matters" format.
