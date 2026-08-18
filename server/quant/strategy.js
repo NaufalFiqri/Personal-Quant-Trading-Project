@@ -142,6 +142,55 @@ function volumeBreakoutStrategy(
   return signals;
 }
 
+// Deterministic PRNG (mulberry32) so a given seed always reproduces the
+// exact same sequence of entries - a baseline that changed on every run
+// would be useless to compare against.
+function mulberry32(seed) {
+  let state = seed | 0;
+  return function () {
+    state = (state + 0x6d2b79f5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// No-edge baseline for comparison against volumeBreakoutStrategy: identical
+// Turtle-style exitPeriod-day-low exit, identical warm-up gate on that same
+// rollingLow, and entries land on the ATR stop-loss wrapper the same way
+// (that wrapper lives in backtest.js, applied uniformly to whatever
+// strategy's signals it's given) - the only thing that differs is that BUY
+// entries fire on a seeded coin-flip instead of a breakout+volume condition.
+// Default entryProbability of 2% per eligible (flat) bar is tuned to land
+// in the same few-trades-per-18-month-window range volumeBreakoutStrategy
+// actually produced (see volume-breakout-vs-bh.js output: 3-10 trades per
+// window), not derived from any formula - it's a rough frequency match, not
+// an exact one.
+function randomEntryStrategy(bars, { entryProbability = 0.02, seed = 42, exitPeriod = 10 } = {}) {
+  const lows = bars.map((b) => b.low);
+  const rollingLow = calculateRollingMin(lows, exitPeriod);
+  const rng = mulberry32(seed);
+
+  const signals = [];
+  let inPosition = false;
+
+  for (let i = 1; i < bars.length; i++) {
+    if (rollingLow[i - 1] == null) continue;
+
+    if (!inPosition) {
+      if (rng() < entryProbability) {
+        signals.push({ date: bars[i].date, action: "BUY", price: bars[i].close });
+        inPosition = true;
+      }
+    } else if (bars[i].close < rollingLow[i - 1]) {
+      signals.push({ date: bars[i].date, action: "SELL", price: bars[i].close });
+      inPosition = false;
+    }
+  }
+
+  return signals;
+}
+
 // Regime gate: drops BUY signals falling on an unfavorable-regime bar (per
 // calculateRegime in regime.js), passing SELL signals through untouched so
 // an already-open position keeps running its normal exit logic regardless
@@ -163,5 +212,6 @@ module.exports = {
   maCrossoverStrategy,
   rsiMeanReversionStrategy,
   volumeBreakoutStrategy,
+  randomEntryStrategy,
   applyRegimeFilter,
 };
