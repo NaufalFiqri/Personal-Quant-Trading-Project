@@ -24,14 +24,23 @@ function runBacktest(bars, signals, options = {}) {
     feePercent = 0.001,
     slippagePercent = 0.0005,
     riskConfig: riskConfigOverrides = {},
+    warmupBars = [],
   } = options;
   const riskConfig = { ...DEFAULT_RISK_CONFIG, ...riskConfigOverrides };
 
   const signalByDate = new Map(signals.map((s) => [s.date, s]));
 
   // Only computed when needed - ATR requires OHLC and a warm-up period the
-  // "percent" method doesn't.
-  const atrValues = riskConfig.stopLossMethod === "atr" ? calculateATR(bars, riskConfig.atrPeriod) : null;
+  // "percent" method doesn't. warmupBars (strictly before bars[0], e.g. the
+  // lookback-extended history walkforward.js already fetches) are prepended
+  // so ATR can arrive at bars[0] already warmed up instead of re-warming
+  // from scratch inside every window; the combined array is sliced back
+  // down to align 1:1 with `bars`, so warmup bars themselves never enter
+  // the trade loop below and can't generate trades or appear in results.
+  const atrValues =
+    riskConfig.stopLossMethod === "atr"
+      ? calculateATR(warmupBars.concat(bars), riskConfig.atrPeriod).slice(warmupBars.length)
+      : null;
 
   let cash = initialCapital;
   let shares = 0;

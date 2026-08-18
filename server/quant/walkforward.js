@@ -60,12 +60,18 @@ async function runWalkForward(ticker, strategyFn, strategyParams, options = {}) 
     const fetchedSignals = strategyFn(fetchedBars, strategyParams);
 
     const bars = lookbackMonths > 0 ? fetchedBars.filter((b) => b.date >= windowStart) : fetchedBars;
+    const warmupBars = lookbackMonths > 0 ? fetchedBars.filter((b) => b.date < windowStart) : [];
     const signals = lookbackMonths > 0 ? fetchedSignals.filter((s) => s.date >= windowStart) : fetchedSignals;
 
     const backtest = runBacktest(bars, signals, {
       initialCapital: 10000,
       feePercent: 0.001,
       slippagePercent: 0.0005,
+      // The same lookback-extended bars used to warm up signal generation
+      // above are handed to runBacktest so its internal ATR calculation
+      // (see backtest.js) gets the same warm-up buffer, instead of always
+      // re-warming from scratch on the window-trimmed `bars` alone.
+      warmupBars,
       // Optional, passed straight through to runBacktest - undefined by
       // default, which falls back to backtest.js's own DEFAULT_RISK_CONFIG,
       // same as every existing caller already gets.
