@@ -12,13 +12,12 @@ A personal project to learn systematic/quantitative trading from the ground up. 
 
 **No strategy is currently recommended for real capital.** No paper trading or live trading has occurred - nothing in this repo places real trades. Everything runs against historical data offline.
 
-**Research Phase 2: IN PROGRESS.** Direction chosen: generic risk-management infrastructure first, before any new signal strategy. `server/quant/risk.js` (position sizing, stop-loss calculation, risk/reward validation, drawdown circuit breaker) is built, unit-tested, and now wired into `backtest.js` - every BUY signal is sized and stopped via `risk.js` instead of investing 100% of cash. See "Research Phase 2: Risk-Managed Backtesting" below for how this changed (and didn't change) the Phase 1 numbers.
+**Research Phase 2: risk-management infrastructure DONE; all 3 initially-scoped signal candidates tested, CONCLUDED, negative result.** `server/quant/risk.js` (position sizing, stop-loss calculation, risk/reward validation, drawdown circuit breaker) is built, unit-tested, and wired into `backtest.js`. All three signal candidates from `PHASE2_SIGNAL_CANDIDATES.md` - a regime-adaptive trend filter, a volume-confirmed breakout, and a confluence of both - have been built and walk-forward validated on the same 7-ticker set. **None demonstrated an entry-timing edge over a random-entry baseline under identical risk management** (volume breakout: 12/21 windows, ~57%; confluence: 11/21 windows, ~52% - neither meaningfully above chance). The regime/trend filter itself is a real, replicated finding in a different dimension: it reliably reduces max drawdown (uniformly across all 7 tickers on one base strategy, in aggregate on the other) while reducing average Sharpe/return - a risk-reduction tool, not an alpha source. See "Research Phase 2: Signal Candidates" and "Research Phase 2: Risk-Managed Backtesting" below, and [LEARNINGS.md](LEARNINGS.md) lesson #11 for the full numbers.
 
 **Not built yet:**
 - Paper trading (simulated live execution)
 - Live trading (real orders, real money)
 - Any frontend/UI
-- A Phase 2 signal strategy that uses `risk.js`
 - `validateRiskReward` is not wired into `backtest.js` - it needs a take-profit target, and none of the current strategies emit one (they exit on a crossover/threshold signal, not a fixed target)
 
 ## Architecture
@@ -100,6 +99,18 @@ Each step was added because the previous one couldn't answer the question that c
 
 **Net effect on the Phase 1 verdict: unchanged.** Phase 1 concluded no strategy in this family has a robust, replicable edge over buy & hold. Risk-managed sizing doesn't create an edge that wasn't there, and the apparent drop from 3/12 to 0/12 "beats" is a sizing-mechanics artifact of comparing a ~40%-invested strategy to a 100%-invested benchmark, not new evidence the underlying signals got worse. The one substantive new finding is the RSI/stop-loss interaction above - a Phase 2 methodology note, not a reversal of Phase 1.
 
+## Research Phase 2: Signal Candidates
+
+All three candidates proposed in `PHASE2_SIGNAL_CANDIDATES.md` after the risk-management work above have now been scoped, built, and walk-forward validated (7 tickers - AAPL, MSFT, JNJ, GOOGL, AMZN, NVDA, META - 18-month windows, 2022-01-01 to today, ATR-based stop-loss). Full numbers: `PHASE2_REGIME_FILTER_SCOPING.md`, `PHASE2_VOLUME_BREAKOUT_SCOPING.md`, `PHASE2_CONFLUENCE_SCOPING.md`, and [LEARNINGS.md](LEARNINGS.md) lessons #9-#11.
+
+**Candidate #3, regime-adaptive trend filter** (`regime.js`'s `calculateRegime`, price vs. 200-day SMA, gating `maCrossoverStrategy`'s entries via `applyRegimeFilter`): reliably cut max drawdown on all 7 of 7 tickers, but Sharpe/return was genuinely mixed - better on 3 tickers, worse on 4. Averaged Sharpe 0.348 -> 0.198.
+
+**Candidate #1, volume-confirmed breakout** (`volumeBreakoutStrategy` - 20-day rolling-high breakout + 1.5x volume confirmation, Turtle-style 10-day exit): beat buy & hold in only 7 of 21 walk-forward windows, all 7 in a window where buy & hold itself was negative - never once in a rising market, including two windows where buy & hold returned +216.62% and +104.71%. Checked against a seeded random-entry baseline under identical risk management: beat random in only 12 of 21 windows (~57%, not meaningfully above chance).
+
+**Candidate #2, confluence of both** (`confluenceBreakoutStrategy` = `applyRegimeFilter(volumeBreakoutStrategy(...), regime)`, a pure composition of the two pieces above, zero new decision logic): stacking the trend filter on top of the breakout entry did not rescue it. Beat a regime-gated random baseline (random entries restricted to the same favorable-regime bars) in 11 of 21 windows (~52%) - if anything a smaller edge than plain breakout showed over its own random baseline, not a larger one. Averaged against plain breakout alone: Sharpe 0.428 -> 0.315, return 4.08% -> 3.59%, max drawdown 4.57% -> 4.15% (improved on 4 of 7 tickers, worse on JNJ, unchanged on NVDA/META where the filter blocked zero signals).
+
+**Verdict: none of the three demonstrated an entry-timing edge over random once risk management was held constant as the comparison baseline - but the trend/regime filter is a real, twice-replicated risk-reduction tool** (lower average drawdown on both base strategies it was tested against), just not a source of return on its own. This doesn't mean regime detection or volume confirmation are dead ends as concepts - it means these specific implementations (200-day MA, 20-day breakout, 1.5x volume threshold), on this dataset, didn't produce one. See LEARNINGS.md lesson #11 for the full writeup, including a process note: the random-entry (and regime-gated random-entry) baseline was the single check that reliably separated a real finding from a misleading one across all three candidates, and is now a standing requirement for any future candidate's validation plan, not an optional follow-up.
+
 ## Key Lessons Learned
 
 - **Win rate alone is not a reliable metric.** RSI mean-reversion posted high win rates (sometimes 100% in a given window) while still underperforming buy & hold overall, because it traded rarely and captured small moves. A strategy can be "right" most of the time it acts and still not be a good strategy.
@@ -112,13 +123,14 @@ See [LEARNINGS.md](LEARNINGS.md) for a more detailed, informal writeup of these 
 
 ## What's Next
 
-**Phase 2 direction chosen:** generic risk-management infrastructure first (`risk.js`, done and now wired into `backtest.js` - see Architecture and "Risk-Managed Backtesting" above), before any new signal strategy. Rationale: Phase 1 showed the tested indicator family has no robust edge on its own; risk management (position sizing, stop-losses, a drawdown circuit breaker) is useful under any future strategy regardless of what that strategy turns out to be, so it doesn't need a signal decision made first.
+**All three initially-scoped Phase 2 signal candidates (`PHASE2_SIGNAL_CANDIDATES.md`) are now tested and closed out** - regime-adaptive filter, volume-confirmed breakout, and their confluence, none showing a demonstrated entry-timing edge over a random-entry baseline (see "Research Phase 2: Signal Candidates" above and LEARNINGS.md lesson #11). The risk-management infrastructure built to support them (`risk.js`, wired into `backtest.js`) remains genuinely useful and is not in question - the negative result is specific to these three signal-generation approaches, not to the infrastructure they ran on.
 
 **RSI/stop-loss interaction investigated further (session 10):** widening the percent stop (8%/10%) or switching to ATR-based stops (default 14-period/2x multiplier) does not restore RSI mean-reversion's Sharpe ratio to its no-risk-management baseline - see [LEARNINGS.md](LEARNINGS.md) lesson #7 for the full numbers. Read as a structural mismatch between hard price stops and this mean-reversion strategy's trade logic, not a mistuned stop width.
 
 Not yet decided:
-- **New signal types** - moving beyond simple technical indicator crossovers/thresholds toward something with a different theoretical basis, to actually use `risk.js` against.
-- Whether an ATR stop with a wider multiplier (untested - only the default 2x was tried) or a non-price-based exit (time-based, position-size-only) would fix the RSI mismatch, or whether it's not worth pursuing further given RSI's edge was already thin in Phase 1.
+- **A genuinely new signal direction beyond the three tested** - `PHASE2_SIGNAL_CANDIDATES.md`'s three candidates are exhausted; nothing currently scoped takes their place. Whatever comes next needs its own theoretical basis, not a variant of trend-filter/breakout/confluence, and per lesson #11's process note, its validation plan needs a random-entry (and, if it involves a filter, regime-gated random-entry) baseline built into the plan from the scoping stage, not added after the fact.
+- The smaller, orthogonal option named alongside the three candidates but never picked up: replacing RSI mean-reversion's price-based stop with a non-price exit (time-based, or position-sizing-only) to settle whether RSI's *risk management*, not its *signal*, was the actual problem (see `PHASE2_SIGNAL_CANDIDATES.md`'s "smaller, orthogonal option" and lesson #8's partial, inconclusive look at a time-based exit).
+- Whether an ATR stop with a wider multiplier (untested - only the default 2x was tried) would fix the RSI mismatch, or whether it's not worth pursuing further given RSI's edge was already thin in Phase 1.
 
 ## Paper Trade Journal
 
@@ -127,6 +139,12 @@ Not yet decided:
 |---|---|---|---|---|---|---|---|
 
 ## Journal
+
+### 2026-08-19 (session 15)
+- Closed out all three Phase 2 signal candidates from `PHASE2_SIGNAL_CANDIDATES.md`. Scoped and built candidate #2 (`PHASE2_CONFLUENCE_SCOPING.md`, `confluenceBreakoutStrategy` = `applyRegimeFilter(volumeBreakoutStrategy(...), regime)`, a pure composition of two already-validated pieces, zero new decision logic) with unit tests confirming the 3-condition AND, then walk-forward validated it on the same 7-ticker set. Isolated the trend filter's own marginal effect against the already-committed breakout-alone numbers: averaged Sharpe 0.428 -> 0.315, return 4.08% -> 3.59%, max drawdown 4.57% -> 4.15% (improved on 4/7 tickers, worse on JNJ, unchanged on NVDA/META where the filter blocked zero signals) - same direction as candidate #3's regime-filter effect on `maCrossoverStrategy`, now replicated on a second base strategy.
+- Ran both random-entry baselines scoped in `PHASE2_CONFLUENCE_SCOPING.md` §6: an ungated one (reusing the exact `randomEntryStrategy`/seed from lesson #10) and a regime-gated one (`applyRegimeFilter` applied to `randomEntryStrategy`, entry probability re-derived from the pooled favorable-regime bar fraction across all 7 tickers so its in-regime firing rate matches the ungated baseline's original calibration). Result: confluence beat regime-gated-random in 11/21 windows (~52%), breakout-alone beat ungated-random in 12/21 (~57%) - stacking the trend filter on the breakout entry did not produce an edge the entry logic didn't already lack on its own.
+- Wrote LEARNINGS.md lesson #11 tying all three candidates together: none demonstrated an entry-timing edge over a matched random baseline; the trend/regime filter is a real, twice-replicated risk-reduction tool (lower average drawdown on both base strategies tested) but not an alpha source; explicitly flagged what this does and doesn't imply (a finding about these specific implementations on this dataset, not a general verdict on regime detection or volume confirmation as concepts). Extended lesson #10's process note into a standing rule: any future signal candidate's validation plan requires a random-entry (and regime-gated random-entry, if a filter is involved) baseline from the scoping stage onward, not as an optional follow-up - this was the single check that reliably separated a real finding from a misleading one across all three candidates tested this session.
+- Updated README.md's Phase 2 status and "What's Next" to reflect all three candidates closed, and added this entry.
 
 ### 2026-08-12 (session 14)
 - Implemented and validated the regime-adaptive filter scoped in session 12 (`PHASE2_REGIME_FILTER_SCOPING.md`). Built `regime.js` (`calculateRegime`, price vs. 200-period SMA, reusing `calculateSMA`) with 13 unit tests in `test-regime.js`, and `applyRegimeFilter` in `strategy.js`, wired at the signal level as scoped - `backtest.js` confirmed untouched throughout.
