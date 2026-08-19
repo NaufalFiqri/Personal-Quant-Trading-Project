@@ -6,6 +6,7 @@ const {
   calculateRollingMax,
   calculateRollingMin,
 } = require("./indicators");
+const { calculateRegime } = require("./regime");
 
 const MA_FUNCTIONS = {
   sma: calculateSMA,
@@ -207,6 +208,34 @@ function applyRegimeFilter(signals, regime) {
   });
 }
 
+// Phase 2 candidate #2 (PHASE2_CONFLUENCE_SCOPING.md): a genuine 3-condition
+// AND - not-in-position, trend favorable (calculateRegime), breakout+volume
+// (volumeBreakoutStrategy, itself already a 2-condition AND) - built as pure
+// composition of two already-validated, already-unit-tested pieces rather
+// than new decision logic. applyRegimeFilter's existing entry-gate-only
+// behavior (blocks BUY on unfavorable-or-unknown regime, passes every SELL
+// through untouched) is what supplies the trend condition and leaves the
+// exit exactly as volumeBreakoutStrategy already defined it.
+function confluenceBreakoutStrategy(
+  bars,
+  {
+    maPeriod = 200,
+    breakoutPeriod = 20,
+    volumePeriod = 20,
+    volumeMultiplier = 1.5,
+    exitPeriod = 10,
+  } = {}
+) {
+  const regime = calculateRegime(bars, { maPeriod });
+  const signals = volumeBreakoutStrategy(bars, {
+    breakoutPeriod,
+    volumePeriod,
+    volumeMultiplier,
+    exitPeriod,
+  });
+  return applyRegimeFilter(signals, regime);
+}
+
 module.exports = {
   smaCrossoverStrategy,
   maCrossoverStrategy,
@@ -214,4 +243,5 @@ module.exports = {
   volumeBreakoutStrategy,
   randomEntryStrategy,
   applyRegimeFilter,
+  confluenceBreakoutStrategy,
 };
