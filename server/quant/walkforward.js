@@ -41,7 +41,16 @@ function buildWindows(startDate, endDate, windowMonths, minWindowMonths) {
 // each sequential window, so results show whether behavior holds up across
 // many different real periods rather than looking good in one chosen range.
 async function runWalkForward(ticker, strategyFn, strategyParams, options = {}) {
-  const { startDate, endDate, windowMonths = 6, minWindowMonths = 3, lookbackMonths = 0, riskConfig } = options;
+  const {
+    startDate,
+    endDate,
+    windowMonths = 6,
+    minWindowMonths = 3,
+    lookbackMonths = 0,
+    riskConfig,
+    feePercent = 0.001,
+    slippagePercent = 0.0005,
+  } = options;
 
   const windows = buildWindows(startDate, endDate, windowMonths, minWindowMonths);
   const windowResults = [];
@@ -65,8 +74,8 @@ async function runWalkForward(ticker, strategyFn, strategyParams, options = {}) 
 
     const backtest = runBacktest(bars, signals, {
       initialCapital: 10000,
-      feePercent: 0.001,
-      slippagePercent: 0.0005,
+      feePercent,
+      slippagePercent,
       // The same lookback-extended bars used to warm up signal generation
       // above are handed to runBacktest so its internal ATR calculation
       // (see backtest.js) gets the same warm-up buffer, instead of always
