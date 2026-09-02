@@ -1,0 +1,144 @@
+{
+  "AAPL": {
+    "totalFilings": 196,
+    "parsedCount": 196,
+    "filingsWithP": 0,
+    "pTransactions": [],
+    "distinctInsiders": [],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "MSFT": {
+    "totalFilings": 534,
+    "parsedCount": 534,
+    "filingsWithP": 3,
+    "pTransactions": [
+      {
+        "insider": "STANTON JOHN W",
+        "role": "Other",
+        "date": "2026-02-18",
+        "shares": "5000",
+        "price": "397.35",
+        "accession": "0000789019-26-000028"
+      },
+      {
+        "insider": "SMITH BRADFORD L",
+        "role": "Other",
+        "date": "2025-04-23",
+        "shares": "3842",
+        "price": "377.4650",
+        "accession": "0000789019-25-000120"
+      },
+      {
+        "insider": "Walmsley Emma N",
+        "role": "Other",
+        "date": "2022-01-28",
+        "shares": "1700",
+        "price": "295.4803",
+        "accession": "0001062993-22-002063"
+      },
+      {
+        "insider": "Walmsley Emma N",
+        "role": "Other",
+        "date": "2022-01-31",
+        "shares": "1600",
+        "price": "311.5281",
+        "accession": "0001062993-22-002063"
+      }
+    ],
+    "distinctInsiders": [
+      "STANTON JOHN W",
+      "SMITH BRADFORD L",
+      "Walmsley Emma N"
+    ],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "JNJ": {
+    "totalFilings": 323,
+    "parsedCount": 323,
+    "filingsWithP": 2,
+    "pTransactions": [
+      {
+        "insider": "MORIKIS JOHN G",
+        "role": "Other",
+        "date": "2025-11-26",
+        "shares": "1250",
+        "price": "206.15",
+        "accession": "0000200406-25-000211"
+      },
+      {
+        "insider": "WEINBERGER MARK A",
+        "role": "Other",
+        "date": "2024-12-12",
+        "shares": "1000",
+        "price": "147.22",
+        "accession": "0000200406-24-000106"
+      }
+    ],
+    "distinctInsiders": [
+      "MORIKIS JOHN G",
+      "WEINBERGER MARK A"
+    ],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "GOOGL": {
+    "totalFilings": 740,
+    "parsedCount": 740,
+    "filingsWithP": 1,
+    "pTransactions": [
+      {
+        "insider": "Sergey Brin",
+        "role": "Other",
+        "date": "2022-03-07",
+        "shares": "100",
+        "price": "2537.39",
+        "accession": "0001209191-22-017745"
+      }
+    ],
+    "distinctInsiders": [
+      "Sergey Brin"
+    ],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "AMZN": {
+    "totalFilings": 356,
+    "parsedCount": 356,
+    "filingsWithP": 1,
+    "pTransactions": [
+      {
+        "insider": "BEZOS JEFFREY P",
+        "role": "Other",
+        "date": "2023-05-25",
+        "shares": "1",
+        "price": "114.77",
+        "accession": "0001104659-23-065485"
+      }
+    ],
+    "distinctInsiders": [
+      "BEZOS JEFFREY P"
+    ],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "NVDA": {
+    "totalFilings": 442,
+    "parsedCount": 442,
+    "filingsWithP": 0,
+    "pTransactions": [],
+    "distinctInsiders": [],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "META": {
+    "totalFilings": 1000,
+    "parsedCount": 1000,
+    "filingsWithP": 0,
+    "pTransactions": [],
+    "distinctInsiders": [],
+    "clusterCount": 0,
+    "clusterDates": []
+  }
+}
