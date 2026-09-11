@@ -1,0 +1,1331 @@
+{
+  "GGG": {
+    "totalFilings": 344,
+    "parsedCount": 344,
+    "filingsWithP": 2,
+    "pTransactions": [
+      {
+        "insider": "Simon Andrea Helen",
+        "role": "Other",
+        "date": "2026-04-27",
+        "shares": "1240",
+        "price": "80.53",
+        "accession": "0000042888-26-000103"
+      },
+      {
+        "insider": "SHEAHAN MARK W",
+        "role": "Other",
+        "date": "2023-07-31",
+        "shares": "1263",
+        "price": "79.04",
+        "accession": "0001127602-23-021622"
+      }
+    ],
+    "distinctInsiders": [
+      "Simon Andrea Helen",
+      "SHEAHAN MARK W"
+    ],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "RLI": {
+    "totalFilings": 254,
+    "parsedCount": 254,
+    "filingsWithP": 15,
+    "pTransactions": [
+      {
+        "insider": "KELLOGG CLARK C",
+        "role": "Director",
+        "date": "2026-06-01",
+        "shares": "3000",
+        "price": "50.90",
+        "accession": "0001785329-26-000011"
+      },
+      {
+        "insider": "Duclos David B.",
+        "role": "Director",
+        "date": "2026-05-28",
+        "shares": "2500",
+        "price": "51.99",
+        "accession": "0001431045-26-000004"
+      },
+      {
+        "insider": "Kliethermes Craig W",
+        "role": "CHIEF EXECUTIVE OFFICER",
+        "date": "2026-05-27",
+        "shares": "2000",
+        "price": "52",
+        "accession": "0001388737-26-000010"
+      },
+      {
+        "insider": "Klobnak Jennifer L",
+        "role": "CHIEF OPERATING OFFICER",
+        "date": "2026-05-27",
+        "shares": "2000",
+        "price": "52.72",
+        "accession": "0001666279-26-000010"
+      },
+      {
+        "insider": "Kliethermes Craig W",
+        "role": "CHIEF EXECUTIVE OFFICER",
+        "date": "2026-05-21",
+        "shares": "5000",
+        "price": "52",
+        "accession": "0001388737-26-000008"
+      },
+      {
+        "insider": "Klobnak Jennifer L",
+        "role": "CHIEF OPERATING OFFICER",
+        "date": "2026-05-19",
+        "shares": "2000",
+        "price": "53.42",
+        "accession": "0001666279-26-000008"
+      },
+      {
+        "insider": "Kliethermes Craig W",
+        "role": "CHIEF EXECUTIVE OFFICER",
+        "date": "2026-01-23",
+        "shares": "5000",
+        "price": "57.45",
+        "accession": "0001388737-26-000002"
+      },
+      {
+        "insider": "Klobnak Jennifer L",
+        "role": "CHIEF OPERATING OFFICER",
+        "date": "2026-01-23",
+        "shares": "2000",
+        "price": "57.99",
+        "accession": "0001666279-26-000002"
+      },
+      {
+        "insider": "Klobnak Jennifer L",
+        "role": "CHIEF OPERATING OFFICER",
+        "date": "2025-07-24",
+        "shares": "3000",
+        "price": "69.15",
+        "accession": "0001415889-25-020252"
+      },
+      {
+        "insider": "Duclos David B.",
+        "role": "Director",
+        "date": "2025-01-29",
+        "shares": "2000",
+        "price": "72.50",
+        "accession": "0001415889-25-002332"
+      },
+      {
+        "insider": "Angelina Michael E",
+        "role": "Director",
+        "date": "2025-01-24",
+        "shares": "2200",
+        "price": "72.62",
+        "accession": "0001415889-25-002148"
+      },
+      {
+        "insider": "FICK JEFFREY D",
+        "role": "CHIEF LEGAL OFFICER &amp; CORP SEC",
+        "date": "2025-01-24",
+        "shares": "2000",
+        "price": "72.13",
+        "accession": "0001415889-25-002147"
+      },
+      {
+        "insider": "Kliethermes Craig W",
+        "role": "CHIEF EXECUTIVE OFFICER",
+        "date": "2025-01-24",
+        "shares": "5000",
+        "price": "71.35",
+        "accession": "0001415889-25-002146"
+      },
+      {
+        "insider": "Klobnak Jennifer L",
+        "role": "CHIEF OPERATING OFFICER",
+        "date": "2025-01-24",
+        "shares": "2000",
+        "price": "72.10",
+        "accession": "0001415889-25-002145"
+      },
+      {
+        "insider": "Angelina Michael E",
+        "role": "Other",
+        "date": "2023-02-24",
+        "shares": "213",
+        "price": "131.41",
+        "accession": "0001127602-23-007304"
+      }
+    ],
+    "distinctInsiders": [
+      "KELLOGG CLARK C",
+      "Duclos David B.",
+      "Kliethermes Craig W",
+      "Klobnak Jennifer L",
+      "Angelina Michael E",
+      "FICK JEFFREY D"
+    ],
+    "clusterCount": 3,
+    "clusterDates": [
+      "2025-01-24",
+      "2026-01-23",
+      "2026-05-21"
+    ]
+  },
+  "SSD": {
+    "totalFilings": 173,
+    "parsedCount": 173,
+    "filingsWithP": 0,
+    "pTransactions": [],
+    "distinctInsiders": [],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "WDFC": {
+    "totalFilings": 117,
+    "parsedCount": 117,
+    "filingsWithP": 19,
+    "pTransactions": [
+      {
+        "insider": "PENDARVIS DAVID",
+        "role": "Director",
+        "date": "2026-02-05",
+        "shares": "424",
+        "price": "247.15",
+        "accession": "0000105132-26-000011"
+      },
+      {
+        "insider": "Etchart Eric",
+        "role": "Director",
+        "date": "2025-10-30",
+        "shares": "500",
+        "price": "194.02",
+        "accession": "0000105132-25-000097"
+      },
+      {
+        "insider": "PENDARVIS DAVID",
+        "role": "Director",
+        "date": "2025-10-30",
+        "shares": "523",
+        "price": "196.37",
+        "accession": "0000105132-25-000093"
+      },
+      {
+        "insider": "KIAMILEV PHENIX Q.",
+        "role": "VP, GC &amp; Chief Compliance Ofcr",
+        "date": "2025-10-28",
+        "shares": "55",
+        "price": "200.46",
+        "accession": "0000105132-25-000087"
+      },
+      {
+        "insider": "Brass Steven A",
+        "role": "President and CEO",
+        "date": "2025-10-28",
+        "shares": "362",
+        "price": "200.46",
+        "accession": "0000105132-25-000086"
+      },
+      {
+        "insider": "HYZER SARA KATHLEEN",
+        "role": "VP, Finance &amp; CFO",
+        "date": "2025-10-28",
+        "shares": "200",
+        "price": "200.46",
+        "accession": "0000105132-25-000085"
+      },
+      {
+        "insider": "CARTER DANIEL T",
+        "role": "Director",
+        "date": "2025-10-27",
+        "shares": "1000",
+        "price": "199.37",
+        "accession": "0000105132-25-000068"
+      },
+      {
+        "insider": "HYZER SARA KATHLEEN",
+        "role": "VP, Finance &amp; CFO",
+        "date": "2025-04-11",
+        "shares": "256",
+        "price": "222.83",
+        "accession": "0000105132-25-000018"
+      },
+      {
+        "insider": "HYZER SARA KATHLEEN",
+        "role": "VP, Finance &amp; CFO",
+        "date": "2024-05-09",
+        "shares": "213",
+        "price": "232.83",
+        "accession": "0000105132-24-000035"
+      },
+      {
+        "insider": "Brass Steven A",
+        "role": "President and CEO",
+        "date": "2024-04-16",
+        "shares": "432",
+        "price": "232.22",
+        "accession": "0000105132-24-000029"
+      },
+      {
+        "insider": "PENDARVIS DAVID",
+        "role": "Director",
+        "date": "2024-04-12",
+        "shares": "328",
+        "price": "234.75",
+        "accession": "0000105132-24-000027"
+      },
+      {
+        "insider": "LINDEMAN JEFFREY G",
+        "role": "VP, Chief People, Cult. &amp; Cap.",
+        "date": "2024-02-12",
+        "shares": "182",
+        "price": "272.42",
+        "accession": "0000105132-24-000009"
+      },
+      {
+        "insider": "LINDEMAN JEFFREY G",
+        "role": "VP, Chief People Officer",
+        "date": "2023-04-13",
+        "shares": "543",
+        "price": "179.08",
+        "accession": "0001140361-23-018522"
+      },
+      {
+        "insider": "Brass Steven A",
+        "role": "President and CEO",
+        "date": "2023-04-13",
+        "shares": "558",
+        "price": "179.08",
+        "accession": "0001140361-23-018520"
+      },
+      {
+        "insider": "HYZER SARA KATHLEEN",
+        "role": "VP, Finance &amp; CFO",
+        "date": "2023-04-13",
+        "shares": "168",
+        "price": "179.08",
+        "accession": "0001140361-23-018518"
+      },
+      {
+        "insider": "KIAMILEV PHENIX Q.",
+        "role": "VP, General Counsel &amp; Corp Sec",
+        "date": "2023-04-13",
+        "shares": "224",
+        "price": "179.08",
+        "accession": "0001140361-23-018488"
+      },
+      {
+        "insider": "Brass Steven A",
+        "role": "Other",
+        "date": "2023-01-18",
+        "shares": "586",
+        "price": "170.57",
+        "accession": "0001567619-23-001054"
+      },
+      {
+        "insider": "Brass Steven A",
+        "role": "Other",
+        "date": "2022-10-26",
+        "shares": "632",
+        "price": "158.16",
+        "accession": "0001567619-22-018864"
+      },
+      {
+        "insider": "Etchart Eric",
+        "role": "Other",
+        "date": "2022-08-04",
+        "shares": "500",
+        "price": "177.60",
+        "accession": "0001567619-22-015084"
+      }
+    ],
+    "distinctInsiders": [
+      "PENDARVIS DAVID",
+      "Etchart Eric",
+      "KIAMILEV PHENIX Q.",
+      "Brass Steven A",
+      "HYZER SARA KATHLEEN",
+      "CARTER DANIEL T",
+      "LINDEMAN JEFFREY G"
+    ],
+    "clusterCount": 3,
+    "clusterDates": [
+      "2023-04-13",
+      "2024-04-16",
+      "2025-10-28"
+    ]
+  },
+  "TTC": {
+    "totalFilings": 251,
+    "parsedCount": 251,
+    "filingsWithP": 8,
+    "pTransactions": [
+      {
+        "insider": "Drake Angela C",
+        "role": "Other",
+        "date": "2026-06-16",
+        "shares": "160",
+        "price": "90.005",
+        "accession": "0001628280-26-043797"
+      },
+      {
+        "insider": "Funk Edric C",
+        "role": "Other",
+        "date": "2025-06-09",
+        "shares": "100",
+        "price": "69.64",
+        "accession": "0000737758-25-000058"
+      },
+      {
+        "insider": "Funk Edric C",
+        "role": "Other",
+        "date": "2025-06-09",
+        "shares": "15",
+        "price": "69.655",
+        "accession": "0000737758-25-000058"
+      },
+      {
+        "insider": "Funk Edric C",
+        "role": "Other",
+        "date": "2025-03-12",
+        "shares": "67",
+        "price": "73.53",
+        "accession": "0000737758-25-000039"
+      },
+      {
+        "insider": "Funk Edric C",
+        "role": "Other",
+        "date": "2025-03-12",
+        "shares": "0.167",
+        "price": "73.585",
+        "accession": "0000737758-25-000039"
+      },
+      {
+        "insider": "Funk Edric C",
+        "role": "Other",
+        "date": "2025-03-10",
+        "shares": "40",
+        "price": "77.10",
+        "accession": "0000737758-25-000035"
+      },
+      {
+        "insider": "Funk Edric C",
+        "role": "Other",
+        "date": "2024-12-20",
+        "shares": "280",
+        "price": "81.48",
+        "accession": "0000737758-24-000127"
+      },
+      {
+        "insider": "Funk Edric C",
+        "role": "Other",
+        "date": "2024-12-20",
+        "shares": "20",
+        "price": "81.48",
+        "accession": "0000737758-24-000127"
+      },
+      {
+        "insider": "Funk Edric C",
+        "role": "Other",
+        "date": "2023-09-11",
+        "shares": "100",
+        "price": "82.12",
+        "accession": "0001127602-23-024048"
+      },
+      {
+        "insider": "Walters Daryn A",
+        "role": "Other",
+        "date": "2023-06-23",
+        "shares": "1654",
+        "price": "97.41",
+        "accession": "0001127602-23-019435"
+      },
+      {
+        "insider": "Walters Daryn A",
+        "role": "Other",
+        "date": "2023-03-30",
+        "shares": "910",
+        "price": "110.05",
+        "accession": "0001127602-23-011938"
+      }
+    ],
+    "distinctInsiders": [
+      "Drake Angela C",
+      "Funk Edric C",
+      "Walters Daryn A"
+    ],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "DCI": {
+    "totalFilings": 231,
+    "parsedCount": 231,
+    "filingsWithP": 1,
+    "pTransactions": [
+      {
+        "insider": "Hilger Christopher M.",
+        "role": "Other",
+        "date": "2023-04-11",
+        "shares": "3186",
+        "price": "62.76",
+        "accession": "0000029644-23-000047"
+      }
+    ],
+    "distinctInsiders": [
+      "Hilger Christopher M."
+    ],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "CW": {
+    "totalFilings": 253,
+    "parsedCount": 253,
+    "filingsWithP": 24,
+    "pTransactions": [
+      {
+        "insider": "Lyash Jeffrey J.",
+        "role": "Other",
+        "date": "2026-08-10",
+        "shares": "209.3801",
+        "price": "711.62",
+        "accession": "0001628280-26-055200"
+      },
+      {
+        "insider": "McDonald George P.",
+        "role": "Other",
+        "date": "2025-01-06",
+        "shares": "30",
+        "price": "304.12",
+        "accession": "0001628280-25-000534"
+      },
+      {
+        "insider": "Watts John C",
+        "role": "Other",
+        "date": "2025-01-06",
+        "shares": "19",
+        "price": "304.12",
+        "accession": "0001628280-25-000526"
+      },
+      {
+        "insider": "Rayment Kevin",
+        "role": "Other",
+        "date": "2025-01-06",
+        "shares": "52",
+        "price": "304.12",
+        "accession": "0001628280-25-000524"
+      },
+      {
+        "insider": "Freda Robert F",
+        "role": "Other",
+        "date": "2025-01-06",
+        "shares": "27",
+        "price": "304.12",
+        "accession": "0001628280-25-000518"
+      },
+      {
+        "insider": "Ferdenzi Paul J",
+        "role": "Other",
+        "date": "2025-01-06",
+        "shares": "34",
+        "price": "304.12",
+        "accession": "0001628280-25-000511"
+      },
+      {
+        "insider": "Farkas K Christopher",
+        "role": "Other",
+        "date": "2025-01-06",
+        "shares": "30",
+        "price": "304.12",
+        "accession": "0001628280-25-000499"
+      },
+      {
+        "insider": "Bamford Lynn M",
+        "role": "Other",
+        "date": "2025-01-06",
+        "shares": "34",
+        "price": "304.12",
+        "accession": "0001628280-25-000493"
+      },
+      {
+        "insider": "Ferdenzi Paul J",
+        "role": "Other",
+        "date": "2024-07-03",
+        "shares": "46",
+        "price": "232.62",
+        "accession": "0001628280-24-031258"
+      },
+      {
+        "insider": "Bamford Lynn M",
+        "role": "Other",
+        "date": "2024-07-03",
+        "shares": "44",
+        "price": "232.62",
+        "accession": "0001628280-24-031257"
+      },
+      {
+        "insider": "Farkas K Christopher",
+        "role": "Other",
+        "date": "2024-07-03",
+        "shares": "51",
+        "price": "232.62",
+        "accession": "0001628280-24-031256"
+      },
+      {
+        "insider": "Watts John C",
+        "role": "Other",
+        "date": "2024-07-03",
+        "shares": "25",
+        "price": "232.62",
+        "accession": "0001628280-24-031255"
+      },
+      {
+        "insider": "Freda Robert F",
+        "role": "Other",
+        "date": "2024-07-03",
+        "shares": "55",
+        "price": "232.62",
+        "accession": "0001628280-24-031254"
+      },
+      {
+        "insider": "Farkas K Christopher",
+        "role": "Other",
+        "date": "2024-01-04",
+        "shares": "51",
+        "price": "189.3205",
+        "accession": "0001628280-24-000612"
+      },
+      {
+        "insider": "Ferdenzi Paul J",
+        "role": "Other",
+        "date": "2024-01-04",
+        "shares": "42",
+        "price": "189.3205",
+        "accession": "0001628280-24-000611"
+      },
+      {
+        "insider": "Watts John C",
+        "role": "Other",
+        "date": "2024-01-04",
+        "shares": "30",
+        "price": "189.3205",
+        "accession": "0001628280-24-000609"
+      },
+      {
+        "insider": "Bamford Lynn M",
+        "role": "Other",
+        "date": "2024-01-04",
+        "shares": "52",
+        "price": "189.3205",
+        "accession": "0001628280-24-000608"
+      },
+      {
+        "insider": "Freda Robert F",
+        "role": "Other",
+        "date": "2024-01-04",
+        "shares": "49",
+        "price": "189.3205",
+        "accession": "0001628280-24-000606"
+      },
+      {
+        "insider": "Farkas K Christopher",
+        "role": "Other",
+        "date": "2023-07-10",
+        "shares": "73",
+        "price": "155.43",
+        "accession": "0001628280-23-024729"
+      },
+      {
+        "insider": "Ferdenzi Paul J",
+        "role": "Other",
+        "date": "2023-07-10",
+        "shares": "84",
+        "price": "155.43",
+        "accession": "0001628280-23-024728"
+      },
+      {
+        "insider": "Ogilby Gary A",
+        "role": "Other",
+        "date": "2023-07-10",
+        "shares": "85",
+        "price": "155.43",
+        "accession": "0001628280-23-024727"
+      },
+      {
+        "insider": "Bamford Lynn M",
+        "role": "Other",
+        "date": "2023-07-10",
+        "shares": "62",
+        "price": "155.43",
+        "accession": "0001628280-23-024726"
+      },
+      {
+        "insider": "Freda Robert F",
+        "role": "Other",
+        "date": "2023-07-10",
+        "shares": "76",
+        "price": "155.43",
+        "accession": "0001628280-23-024725"
+      },
+      {
+        "insider": "Watts John C",
+        "role": "Other",
+        "date": "2023-07-10",
+        "shares": "36",
+        "price": "155.43",
+        "accession": "0001628280-23-024724"
+      }
+    ],
+    "distinctInsiders": [
+      "Lyash Jeffrey J.",
+      "McDonald George P.",
+      "Watts John C",
+      "Rayment Kevin",
+      "Freda Robert F",
+      "Ferdenzi Paul J",
+      "Farkas K Christopher",
+      "Bamford Lynn M",
+      "Ogilby Gary A"
+    ],
+    "clusterCount": 1,
+    "clusterDates": [
+      "2023-07-10"
+    ]
+  },
+  "NVST": {
+    "totalFilings": 160,
+    "parsedCount": 160,
+    "filingsWithP": 6,
+    "pTransactions": [
+      {
+        "insider": "Keel Paul A",
+        "role": "Other",
+        "date": "2024-08-13",
+        "shares": "30000",
+        "price": "16.87",
+        "accession": "0001757073-24-000069"
+      },
+      {
+        "insider": "Hammes Eric D.",
+        "role": "Other",
+        "date": "2024-08-12",
+        "shares": "24532",
+        "price": "16.33",
+        "accession": "0001757073-24-000068"
+      },
+      {
+        "insider": "Conley Eric",
+        "role": "Other",
+        "date": "2023-11-16",
+        "shares": "2182",
+        "price": "22.89",
+        "accession": "0001757073-23-000077"
+      },
+      {
+        "insider": "Conley Eric",
+        "role": "Other",
+        "date": "2023-11-16",
+        "shares": "1",
+        "price": "22.898",
+        "accession": "0001757073-23-000077"
+      },
+      {
+        "insider": "Conley Eric",
+        "role": "Other",
+        "date": "2023-11-16",
+        "shares": "2",
+        "price": "22.90",
+        "accession": "0001757073-23-000077"
+      },
+      {
+        "insider": "Nance Mark E",
+        "role": "Other",
+        "date": "2023-11-08",
+        "shares": "5000",
+        "price": "21.75",
+        "accession": "0001757073-23-000074"
+      },
+      {
+        "insider": "Aghdaei Amir",
+        "role": "Other",
+        "date": "2023-11-06",
+        "shares": "7802",
+        "price": "21.53",
+        "accession": "0001757073-23-000073"
+      },
+      {
+        "insider": "Aghdaei Amir",
+        "role": "Other",
+        "date": "2023-11-06",
+        "shares": "600",
+        "price": "21.52",
+        "accession": "0001757073-23-000073"
+      },
+      {
+        "insider": "Aghdaei Amir",
+        "role": "Other",
+        "date": "2023-11-06",
+        "shares": "701",
+        "price": "21.51",
+        "accession": "0001757073-23-000073"
+      },
+      {
+        "insider": "Aghdaei Amir",
+        "role": "Other",
+        "date": "2023-11-06",
+        "shares": "897",
+        "price": "21.50",
+        "accession": "0001757073-23-000073"
+      },
+      {
+        "insider": "Keller Stephen",
+        "role": "Other",
+        "date": "2023-11-06",
+        "shares": "2000",
+        "price": "21.53",
+        "accession": "0001757073-23-000072"
+      }
+    ],
+    "distinctInsiders": [
+      "Keel Paul A",
+      "Hammes Eric D.",
+      "Conley Eric",
+      "Nance Mark E",
+      "Aghdaei Amir",
+      "Keller Stephen"
+    ],
+    "clusterCount": 2,
+    "clusterDates": [
+      "2023-11-06",
+      "2024-08-13"
+    ]
+  },
+  "ICUI": {
+    "totalFilings": 148,
+    "parsedCount": 148,
+    "filingsWithP": 3,
+    "pTransactions": [
+      {
+        "insider": "Greenberg David C.",
+        "role": "Other",
+        "date": "2025-08-27",
+        "shares": "602",
+        "price": "126.1428",
+        "accession": "0001645866-25-000003"
+      },
+      {
+        "insider": "Greenberg David C.",
+        "role": "Other",
+        "date": "2025-08-27",
+        "shares": "598",
+        "price": "126.6895",
+        "accession": "0001645866-25-000003"
+      },
+      {
+        "insider": "Jain Vivek",
+        "role": "Other",
+        "date": "2025-08-14",
+        "shares": "2378",
+        "price": "112.1165",
+        "accession": "0001410442-25-000008"
+      },
+      {
+        "insider": "Jain Vivek",
+        "role": "Other",
+        "date": "2025-08-14",
+        "shares": "19551",
+        "price": "112.9232",
+        "accession": "0001410442-25-000008"
+      },
+      {
+        "insider": "LOPEZ GEORGE A",
+        "role": "Other",
+        "date": "2022-05-12",
+        "shares": "4480",
+        "price": "170.7855",
+        "accession": "0001073397-22-000001"
+      },
+      {
+        "insider": "LOPEZ GEORGE A",
+        "role": "Other",
+        "date": "2022-05-12",
+        "shares": "4917",
+        "price": "172.2362",
+        "accession": "0001073397-22-000001"
+      },
+      {
+        "insider": "LOPEZ GEORGE A",
+        "role": "Other",
+        "date": "2022-05-12",
+        "shares": "7092",
+        "price": "173.0744",
+        "accession": "0001073397-22-000001"
+      },
+      {
+        "insider": "LOPEZ GEORGE A",
+        "role": "Other",
+        "date": "2022-05-12",
+        "shares": "9329",
+        "price": "174.1707",
+        "accession": "0001073397-22-000001"
+      },
+      {
+        "insider": "LOPEZ GEORGE A",
+        "role": "Other",
+        "date": "2022-05-12",
+        "shares": "17",
+        "price": "174.66",
+        "accession": "0001073397-22-000001"
+      }
+    ],
+    "distinctInsiders": [
+      "Greenberg David C.",
+      "Jain Vivek",
+      "LOPEZ GEORGE A"
+    ],
+    "clusterCount": 1,
+    "clusterDates": [
+      "2025-08-27"
+    ]
+  },
+  "CFR": {
+    "totalFilings": 236,
+    "parsedCount": 236,
+    "filingsWithP": 12,
+    "pTransactions": [
+      {
+        "insider": "Henson Matthew Bradley",
+        "role": "Other",
+        "date": "2025-05-02",
+        "shares": "1870",
+        "price": "16.93",
+        "accession": "0000039263-25-000089"
+      },
+      {
+        "insider": "CHASE ANTHONY R",
+        "role": "Other",
+        "date": "2022-06-23",
+        "shares": "1",
+        "price": "109.00",
+        "accession": "0001209191-23-043610"
+      },
+      {
+        "insider": "Kasanoff Howard L.",
+        "role": "Other",
+        "date": "2023-05-05",
+        "shares": "1000",
+        "price": "100.50",
+        "accession": "0001209191-23-030070"
+      },
+      {
+        "insider": "John Howard Willome",
+        "role": "Other",
+        "date": "2023-05-15",
+        "shares": "2000",
+        "price": "98.6562",
+        "accession": "0001209191-23-029664"
+      },
+      {
+        "insider": "Avery Chris",
+        "role": "Other",
+        "date": "2023-05-10",
+        "shares": "5000",
+        "price": "95.75",
+        "accession": "0001209191-23-028658"
+      },
+      {
+        "insider": "Berman Bobby",
+        "role": "Other",
+        "date": "2023-05-04",
+        "shares": "1500",
+        "price": "95.25",
+        "accession": "0001209191-23-027377"
+      },
+      {
+        "insider": "Severyn Carol Jean",
+        "role": "Other",
+        "date": "2023-03-13",
+        "shares": "1500",
+        "price": "107.30",
+        "accession": "0001209191-23-018827"
+      },
+      {
+        "insider": "Wolfshohl Candace K",
+        "role": "Other",
+        "date": "2023-03-15",
+        "shares": "700",
+        "price": "108.2799",
+        "accession": "0001209191-23-018823"
+      },
+      {
+        "insider": "John Howard Willome",
+        "role": "Other",
+        "date": "2023-03-13",
+        "shares": "1000",
+        "price": "105.70",
+        "accession": "0001209191-23-018401"
+      },
+      {
+        "insider": "John Howard Willome",
+        "role": "Other",
+        "date": "2023-03-13",
+        "shares": "1000",
+        "price": "108.30",
+        "accession": "0001209191-23-018401"
+      },
+      {
+        "insider": "Avery Chris",
+        "role": "Other",
+        "date": "2023-03-13",
+        "shares": "5000",
+        "price": "108.085",
+        "accession": "0001209191-23-018169"
+      },
+      {
+        "insider": "GREEN PHILLIP D",
+        "role": "Other",
+        "date": "2023-03-13",
+        "shares": "9500",
+        "price": "106.5918",
+        "accession": "0001209191-23-018137"
+      },
+      {
+        "insider": "Avery Chris",
+        "role": "Other",
+        "date": "2022-05-02",
+        "shares": "5000",
+        "price": "131.55",
+        "accession": "0001209191-22-027036"
+      }
+    ],
+    "distinctInsiders": [
+      "Henson Matthew Bradley",
+      "CHASE ANTHONY R",
+      "Kasanoff Howard L.",
+      "John Howard Willome",
+      "Avery Chris",
+      "Berman Bobby",
+      "Severyn Carol Jean",
+      "Wolfshohl Candace K",
+      "GREEN PHILLIP D"
+    ],
+    "clusterCount": 2,
+    "clusterDates": [
+      "2023-03-13",
+      "2023-05-05"
+    ]
+  },
+  "REXR": {
+    "totalFilings": 123,
+    "parsedCount": 123,
+    "filingsWithP": 3,
+    "pTransactions": [
+      {
+        "insider": "CLARK LAURA E",
+        "role": "Other",
+        "date": "2026-02-27",
+        "shares": "5310",
+        "price": "37.7285",
+        "accession": "0001823297-26-000004"
+      },
+      {
+        "insider": "STOCKERT DAVID P",
+        "role": "Other",
+        "date": "2026-02-27",
+        "shares": "5000",
+        "price": "37.3915",
+        "accession": "0001233000-26-000006"
+      },
+      {
+        "insider": "Fitzmaurice Michael",
+        "role": "Other",
+        "date": "2026-02-27",
+        "shares": "2650",
+        "price": "37.55",
+        "accession": "0001743632-26-000002"
+      }
+    ],
+    "distinctInsiders": [
+      "CLARK LAURA E",
+      "STOCKERT DAVID P",
+      "Fitzmaurice Michael"
+    ],
+    "clusterCount": 1,
+    "clusterDates": [
+      "2026-02-27"
+    ]
+  },
+  "POR": {
+    "totalFilings": 168,
+    "parsedCount": 168,
+    "filingsWithP": 3,
+    "pTransactions": [
+      {
+        "insider": "HOGLUND ROBERT N",
+        "role": "Director",
+        "date": "2026-05-11",
+        "shares": "2000",
+        "price": "48.80",
+        "accession": "0000784977-26-000046"
+      },
+      {
+        "insider": "Felton Benjamin",
+        "role": "Other",
+        "date": "2024-09-11",
+        "shares": "11",
+        "price": "47.485",
+        "accession": "0000784977-24-000159"
+      },
+      {
+        "insider": "Farrell Dawn L",
+        "role": "Director",
+        "date": "2022-05-26",
+        "shares": "4000",
+        "price": "48.518",
+        "accession": "0001214659-22-007572"
+      }
+    ],
+    "distinctInsiders": [
+      "HOGLUND ROBERT N",
+      "Felton Benjamin",
+      "Farrell Dawn L"
+    ],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "IDA": {
+    "totalFilings": 169,
+    "parsedCount": 169,
+    "filingsWithP": 0,
+    "pTransactions": [],
+    "distinctInsiders": [],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "AVA": {
+    "totalFilings": 371,
+    "parsedCount": 371,
+    "filingsWithP": 3,
+    "pTransactions": [
+      {
+        "insider": "Cox Bryan Alden",
+        "role": "Other",
+        "date": "2025-09-16",
+        "shares": "3671.4",
+        "price": "35.55",
+        "accession": "0001724735-25-000003"
+      },
+      {
+        "insider": "MORRIS SCOTT L",
+        "role": "Other",
+        "date": "2023-08-24",
+        "shares": "1561",
+        "price": "32.39",
+        "accession": "0000104918-23-000080"
+      },
+      {
+        "insider": "MORRIS SCOTT L",
+        "role": "Other",
+        "date": "2023-08-24",
+        "shares": "1539",
+        "price": "32.4",
+        "accession": "0000104918-23-000080"
+      },
+      {
+        "insider": "Kinney Scott J",
+        "role": "Other",
+        "date": "2023-06-15",
+        "shares": "1256.77",
+        "price": "40.08",
+        "accession": "0000104918-23-000077"
+      }
+    ],
+    "distinctInsiders": [
+      "Cox Bryan Alden",
+      "MORRIS SCOTT L",
+      "Kinney Scott J"
+    ],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "MANH": {
+    "totalFilings": 186,
+    "parsedCount": 186,
+    "filingsWithP": 0,
+    "pTransactions": [],
+    "distinctInsiders": [],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "BMI": {
+    "totalFilings": 227,
+    "parsedCount": 227,
+    "filingsWithP": 8,
+    "pTransactions": [
+      {
+        "insider": "Callahan Edward F.",
+        "role": "VP-Engineering",
+        "date": "2026-07-30",
+        "shares": "751",
+        "price": "135.2489",
+        "accession": "0001193125-26-328240"
+      },
+      {
+        "insider": "Wrocklage Robert",
+        "role": "EVP-N.A. Muncipal Utility",
+        "date": "2026-04-23",
+        "shares": "1000",
+        "price": "122.35",
+        "accession": "0001193125-26-173658"
+      },
+      {
+        "insider": "Htwe Richard",
+        "role": "VP-Global Operations",
+        "date": "2026-04-21",
+        "shares": "1700",
+        "price": "116.13",
+        "accession": "0001193125-26-169265"
+      },
+      {
+        "insider": "Callahan Edward F.",
+        "role": "VP-Engineering",
+        "date": "2026-04-21",
+        "shares": "858",
+        "price": "116.3",
+        "accession": "0001193125-26-169262"
+      },
+      {
+        "insider": "Tarantino Christina M.",
+        "role": "VP-Controller",
+        "date": "2026-04-21",
+        "shares": "870",
+        "price": "113.8",
+        "accession": "0001193125-26-169263"
+      },
+      {
+        "insider": "Bockhorst Kenneth",
+        "role": "Chairman, President &amp; CEO",
+        "date": "2026-04-21",
+        "shares": "2200",
+        "price": "117.5333",
+        "accession": "0001193125-26-166603"
+      },
+      {
+        "insider": "Bockhorst Kenneth",
+        "role": "Chairman, President &amp; CEO",
+        "date": "2026-02-10",
+        "shares": "3300",
+        "price": "152.42",
+        "accession": "0001193125-26-045681"
+      },
+      {
+        "insider": "Wrocklage Robert",
+        "role": "EVP-N.A. Muncipal Utility",
+        "date": "2026-02-09",
+        "shares": "1650",
+        "price": "152.35",
+        "accession": "0001193125-26-043847"
+      }
+    ],
+    "distinctInsiders": [
+      "Callahan Edward F.",
+      "Wrocklage Robert",
+      "Htwe Richard",
+      "Tarantino Christina M.",
+      "Bockhorst Kenneth"
+    ],
+    "clusterCount": 1,
+    "clusterDates": [
+      "2026-02-10"
+    ]
+  },
+  "LOPE": {
+    "totalFilings": 124,
+    "parsedCount": 124,
+    "filingsWithP": 0,
+    "pTransactions": [],
+    "distinctInsiders": [],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "SAIA": {
+    "totalFilings": 185,
+    "parsedCount": 185,
+    "filingsWithP": 3,
+    "pTransactions": [
+      {
+        "insider": "EPPS DONNA E",
+        "role": "Director",
+        "date": "2025-11-26",
+        "shares": "422.00",
+        "price": "277.595",
+        "accession": "0001793102-25-000005"
+      },
+      {
+        "insider": "GAINOR JOHN P JR",
+        "role": "Director",
+        "date": "2024-08-01",
+        "shares": "382.00",
+        "price": "392.565",
+        "accession": "0001562180-24-005980"
+      },
+      {
+        "insider": "GAINOR JOHN P JR",
+        "role": "Director",
+        "date": "2024-05-02",
+        "shares": "500.00",
+        "price": "407.00",
+        "accession": "0001562180-24-003850"
+      }
+    ],
+    "distinctInsiders": [
+      "EPPS DONNA E",
+      "GAINOR JOHN P JR"
+    ],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "AIT": {
+    "totalFilings": 192,
+    "parsedCount": 192,
+    "filingsWithP": 0,
+    "pTransactions": [],
+    "distinctInsiders": [],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "RHI": {
+    "totalFilings": 92,
+    "parsedCount": 92,
+    "filingsWithP": 0,
+    "pTransactions": [],
+    "distinctInsiders": [],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "MAN": {
+    "totalFilings": 137,
+    "parsedCount": 137,
+    "filingsWithP": 1,
+    "pTransactions": [
+      {
+        "insider": "McGinnis John T",
+        "role": "EVP, CFO",
+        "date": "2024-10-23",
+        "shares": "8000",
+        "price": "62.28",
+        "accession": "0000950170-24-116860"
+      }
+    ],
+    "distinctInsiders": [
+      "McGinnis John T"
+    ],
+    "clusterCount": 0,
+    "clusterDates": []
+  },
+  "MTSI": {
+    "totalFilings": 341,
+    "parsedCount": 341,
+    "filingsWithP": 0,
+    "pTransactions": [],
+    "distinctInsiders": [],
+    "clusterCount": 0,
+    "clusterDates": []
+  }
+}
