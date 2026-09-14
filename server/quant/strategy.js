@@ -236,6 +236,107 @@ function confluenceBreakoutStrategy(
   return applyRegimeFilter(signals, regime);
 }
 
+// Phase 2 insider-cluster candidate (PHASE2_INSIDER_SIGNAL_SCOPING.md §2):
+// pure cluster-detection logic, separated from the strategy itself so it can
+// be unit-tested against hand-built transaction records without any network
+// fetch or bars array, and so the sanity-check/DRIP-flagging step can reuse
+// the exact same trigger-finding logic the strategy uses internally.
+//
+// "Fires once" semantics, same convention as every entry signal in this
+// project: a cluster is a NEW trigger only on the first day 2+ distinct
+// insiders' code-P purchases fall inside the trailing clusterWindowDays
+// window; it does not re-trigger on every subsequent day the condition
+// remains true, and resets once the window next drops back below 2 distinct
+// insiders.
+function detectInsiderClusters(pTransactions, { clusterWindowDays = 30 } = {}) {
+  const sorted = [...pTransactions].sort((a, b) => a.date.localeCompare(b.date));
+  const uniqueDates = [...new Set(sorted.map((t) => t.date))];
+
+  const triggers = [];
+  let inCluster = false;
+
+  for (const date of uniqueDates) {
+    const windowStart = new Date(date);
+    windowStart.setDate(windowStart.getDate() - clusterWindowDays);
+    const windowStartStr = windowStart.toISOString().slice(0, 10);
+
+    const windowTransactions = sorted.filter((t) => t.date >= windowStartStr && t.date <= date);
+    const distinctInsiders = [...new Set(windowTransactions.map((t) => t.insider))];
+
+    if (distinctInsiders.length >= 2) {
+      if (!inCluster) {
+        triggers.push({ date, insiders: distinctInsiders, transactions: windowTransactions });
+        inCluster = true;
+      }
+    } else {
+      inCluster = false;
+    }
+  }
+
+  return triggers;
+}
+
+// Entry = a cluster trigger (per detectInsiderClusters). Exit is deliberately
+// NOT the price-reactive channel every other strategy in this project uses -
+// PHASE2_INSIDER_SIGNAL_SCOPING.md §4 reasoned that insider cluster buying is
+// a 6-12+ month literature-documented effect, so the only native SELL is a
+// fixed maximum hold (default 252 trading days ~= 12 months). There is no
+// separate "6-month minimum" mechanism to implement: since this is the only
+// native exit at all, nothing can close the trade before 12 months except
+// risk.js's ATR/percent stop (wired in at the backtest.js layer, exactly as
+// scoped - "purely as capital protection... not the strategy's primary exit
+// mechanism") - the 6-month floor described in the scoping doc falls out for
+// free rather than needing its own trigger.
+//
+// A cluster's trigger `date` is a filing date, not necessarily a trading
+// day - it's mapped forward to the next available bar, since (per §5's
+// "event dates don't align to the bars array" note) nothing else in this
+// codebase has had to reconcile two independent date sequences before.
+// A second cluster while already in a position is ignored, same
+// not-in-position convention as every other strategy - not designed to
+// extend/reset the hold, per §4's explicit "leave as ignored for v1" call.
+function insiderClusterStrategy(bars, { pTransactions = [], clusterWindowDays = 30, exitTradingDays = 252 } = {}) {
+  const triggers = detectInsiderClusters(pTransactions, { clusterWindowDays });
+  const sortedTriggerDates = [...new Set(triggers.map((t) => t.date))].sort();
+
+  const signals = [];
+  let inPosition = false;
+  let barsHeldSinceEntry = 0;
+  let triggerIdx = 0;
+
+  for (const bar of bars) {
+    // Consume every trigger dated at/before today exactly once, regardless
+    // of position state - a filing date maps forward to the first trading
+    // day at/after it. If flat, the first such bar fires a BUY. If already
+    // in a position, the consumed trigger(s) are simply discarded, not
+    // banked for after the position closes - same "ignored" semantics as
+    // every other strategy's not-in-position guard (a missed crossover
+    // isn't queued up either).
+    let triggeredToday = false;
+    while (triggerIdx < sortedTriggerDates.length && sortedTriggerDates[triggerIdx] <= bar.date) {
+      triggeredToday = true;
+      triggerIdx++;
+    }
+
+    if (!inPosition && triggeredToday) {
+      signals.push({ date: bar.date, action: "BUY", price: bar.close });
+      inPosition = true;
+      barsHeldSinceEntry = 0;
+      continue;
+    }
+
+    if (inPosition) {
+      barsHeldSinceEntry++;
+      if (barsHeldSinceEntry >= exitTradingDays) {
+        signals.push({ date: bar.date, action: "SELL", price: bar.close });
+        inPosition = false;
+      }
+    }
+  }
+
+  return signals;
+}
+
 module.exports = {
   smaCrossoverStrategy,
   maCrossoverStrategy,
@@ -244,4 +345,6 @@ module.exports = {
   randomEntryStrategy,
   applyRegimeFilter,
   confluenceBreakoutStrategy,
+  detectInsiderClusters,
+  insiderClusterStrategy,
 };
