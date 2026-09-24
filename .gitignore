@@ -1,5 +1,8 @@
 node_modules/
 
+# secrets - never commit real API keys
+.env
+
 # OS junk
 .DS_Store
 Thumbs.db
