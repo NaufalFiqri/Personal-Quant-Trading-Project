@@ -36,6 +36,33 @@ const DRY_RUN = process.argv.includes("--dry-run");
 const AS_OF_ARG = process.argv.find((a) => a.startsWith("--as-of="));
 const AS_OF_DATE = AS_OF_ARG ? AS_OF_ARG.split("=")[1] : new Date().toISOString().slice(0, 10);
 
+// Extracted so any test/verification script can build the exact same entry
+// order payload this script would really send, rather than hand-copying the
+// shape and risking the two silently drifting apart.
+function buildEntryOrderPayload({ symbol, qty, stopLossPrice }) {
+  return {
+    symbol,
+    qty,
+    side: "buy",
+    type: "market",
+    // gtc, not day - the attached stop-loss leg needs to stand until this
+    // strategy's own exit condition fires (the 10-day channel break, checked
+    // once per day by this script), which can be many days after entry. A
+    // "day" time-in-force stop would have silently expired at the end of the
+    // entry day, leaving the position completely unprotected for every day
+    // after that until the script's own next check - a real gap, not a
+    // cosmetic default, now fixed before it ever mattered.
+    timeInForce: "gtc",
+    // Stop-loss-only exit (this strategy has no fixed take-profit) - Alpaca
+    // requires order_class "oto" for a single-leg contingent order;
+    // "bracket" would be rejected since it mandates BOTH take_profit and
+    // stop_loss legs. Confirmed against Alpaca's own docs before writing
+    // this, not assumed.
+    orderClass: "oto",
+    stopLoss: { stop_price: stopLossPrice.toFixed(2) },
+  };
+}
+
 function log(line) {
   const stamped = `[${new Date().toISOString()}] ${line}`;
   console.log(stamped);
@@ -121,20 +148,7 @@ async function main() {
         action = "NO_ACTION";
         reason = `sized position rounds to 0 shares (${RISK_PERCENT}% risk of $${equity.toFixed(2)} equity, entry $${entryPrice.toFixed(2)}, stop $${stopLossPrice.toFixed(2)}) - skipping`;
       } else {
-        orderPayload = {
-          symbol: TICKER,
-          qty,
-          side: "buy",
-          type: "market",
-          timeInForce: "day",
-          // Stop-loss-only exit (this strategy has no fixed take-profit) -
-          // Alpaca requires order_class "oto" for a single-leg contingent
-          // order; "bracket" would be rejected since it mandates BOTH
-          // take_profit and stop_loss legs. Confirmed against Alpaca's own
-          // docs before writing this, not assumed.
-          orderClass: "oto",
-          stopLoss: { stop_price: stopLossPrice.toFixed(2) },
-        };
+        orderPayload = buildEntryOrderPayload({ symbol: TICKER, qty, stopLossPrice });
         log(`Constructed order payload: ${JSON.stringify(orderPayload)}`);
         log(`  (entryPrice=$${entryPrice.toFixed(2)}, ATR(${ATR_PERIOD})=${atrToday.toFixed(4)}, stopDistance=${(entryPrice - stopLossPrice).toFixed(4)} = ${(((entryPrice - stopLossPrice) / entryPrice) * 100).toFixed(3)}% of entry, dollarRisk=$${sized.dollarRisk.toFixed(2)})`);
       }
@@ -167,8 +181,12 @@ async function main() {
   log(`=== Daily run end ===\n`);
 }
 
-main().catch((err) => {
-  log(`FATAL ERROR: ${err.message}`);
-  console.error(err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    log(`FATAL ERROR: ${err.message}`);
+    console.error(err);
+    process.exit(1);
+  });
+}
+
+module.exports = { buildEntryOrderPayload };
