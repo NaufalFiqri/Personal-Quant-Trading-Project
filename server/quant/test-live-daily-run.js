@@ -168,6 +168,11 @@ async function testCloseFailureReprotects() {
     stopCall && stopCall.payload.stopPrice === "120.50" && stopCall.payload.qty === "10" && stopCall.payload.side === "sell",
     stopCall
   );
+  check(
+    "close-failure path: the re-placed protective stop uses timeInForce gtc, not day - a day stop would expire at end of the SAME session it's protecting against, defeating the point of restoring protection",
+    stopCall && stopCall.payload.timeInForce === "gtc",
+    stopCall
+  );
   const cancelIdx = calls.findIndex((c) => c.name === "cancelOrder");
   const marketIdx = calls.findIndex((c) => c.name === "placeOrder" && c.payload.type === "market");
   const stopIdx = calls.findIndex((c) => c.name === "placeOrder" && c.payload.type === "stop");
