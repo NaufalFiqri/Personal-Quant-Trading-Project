@@ -11,7 +11,17 @@ const API_SECRET = requireEnv("ALPACA_API_SECRET");
 // Defaults to the paper domain specifically (the safe direction) rather
 // than requiring it - if ALPACA_BASE_URL is ever unset, that should never
 // silently resolve to the live-trading domain.
-const BASE_URL = process.env.ALPACA_BASE_URL || "https://paper-api.alpaca.markets";
+//
+// Normalized (trailing slash and/or an already-included /v2 suffix
+// stripped) because every request path below already includes /v2 itself -
+// a .env value of ".../v2" would otherwise silently produce ".../v2/v2/..."
+// and 404 on every single call. Found this exact bug live during Gate 1
+// verification (a real .env had ALPACA_BASE_URL=".../alpaca.markets/v2"),
+// so this isn't a hypothetical edge case - it's a real misconfiguration the
+// wrapper should tolerate rather than fail on.
+const BASE_URL = (process.env.ALPACA_BASE_URL || "https://paper-api.alpaca.markets")
+  .replace(/\/+$/, "")
+  .replace(/\/v2$/, "");
 
 async function alpacaRequest(pathSuffix, options = {}) {
   const res = await fetch(`${BASE_URL}${pathSuffix}`, {
