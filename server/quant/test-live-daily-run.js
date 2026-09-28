@@ -1,4 +1,4 @@
-const { dropIntradayBarIfMarketOpen, flattenPosition } = require("./live-daily-run");
+const { dropIntradayBarIfMarketOpen, flattenPosition, checkEntryBlockedByOpenOrders } = require("./live-daily-run");
 
 let passed = 0;
 let failed = 0;
@@ -227,12 +227,76 @@ async function testDryRunMakesNoMutatingCalls() {
   check("dry-run: result reports what WOULD have happened", result.dryRun === true && result.wouldSellQty === "2" && result.wouldCancel[0] === "order-5", result);
 }
 
+async function testEntryBlockedWhenOpenOrderExists() {
+  const mockAlpaca = {
+    getOrders: async ({ status, symbols }) => {
+      check("entry-guard: getOrders called with status=open and the right symbol", status === "open" && JSON.stringify(symbols) === JSON.stringify(["AAPL"]), { status, symbols });
+      return [{ id: "stray-order-1", type: "limit", side: "buy" }];
+    },
+  };
+  const result = await checkEntryBlockedByOpenOrders("AAPL", { alpacaClient: mockAlpaca });
+  check("entry-guard: blocked=true when an open order already exists", result.blocked === true, result);
+  check("entry-guard: the open order(s) are returned for logging", result.openOrders.length === 1 && result.openOrders[0].id === "stray-order-1", result);
+}
+
+async function testEntryAllowedWhenNoOpenOrders() {
+  const mockAlpaca = { getOrders: async () => [] };
+  const result = await checkEntryBlockedByOpenOrders("AAPL", { alpacaClient: mockAlpaca });
+  check("entry-guard: blocked=false when there are no open orders", result.blocked === false, result);
+}
+
+async function testExitBlockedWhenNonStopSellAlreadyOpen() {
+  const calls = [];
+  const mockAlpaca = {
+    getPosition: async () => ({ qty: "6" }),
+    getOrders: async () => [{ id: "pending-sell-1", type: "market", side: "sell", stop_price: null }],
+    cancelOrder: async () => {
+      calls.push("cancelOrder");
+      return null;
+    },
+    placeOrder: async () => {
+      calls.push("placeOrder");
+      return {};
+    },
+  };
+  const result = await flattenPosition("AAPL", { alpacaClient: mockAlpaca, dryRun: false });
+  check("exit-guard: skipped when a non-stop sell is already open", result.skipped === true && result.reason === "non-stop sell already open", result);
+  check("exit-guard: neither cancelOrder nor placeOrder was called - no duplicate exit attempted", calls.length === 0, calls);
+}
+
+async function testExitNotBlockedByTheExpectedStopLeg() {
+  // The normal case: the ONLY open order is the strategy's own stop-loss
+  // leg from entry - this must NOT trigger the duplicate-exit guard, since
+  // it's expected and is exactly what flattenPosition is supposed to cancel.
+  const calls = [];
+  const mockAlpaca = {
+    getPosition: async () => ({ qty: "6" }),
+    getOrders: async () => [{ id: "stop-leg-1", type: "stop", side: "sell", stop_price: "100.00" }],
+    cancelOrder: async (id) => {
+      calls.push({ name: "cancelOrder", id });
+      return null;
+    },
+    getOrder: async (id) => ({ id, status: "canceled" }),
+    placeOrder: async (payload) => {
+      calls.push({ name: "placeOrder", payload });
+      return { id: "sell-1" };
+    },
+  };
+  const result = await flattenPosition("AAPL", { alpacaClient: mockAlpaca, dryRun: false });
+  check("exit-guard: the expected stop leg alone does NOT trigger the duplicate-exit skip", result.skipped !== true, result);
+  check("exit-guard: cancel and close both still proceed normally", calls.some((c) => c.name === "cancelOrder") && calls.some((c) => c.name === "placeOrder"), calls);
+}
+
 async function main() {
   await checkAsync("happy path", testHappyPath);
   await checkAsync("cancel-failure path", testCancelFailurePath);
   await checkAsync("close-failure-reprotects path", testCloseFailureReprotects);
   await checkAsync("close-and-reprotect-both-fail path", testCloseFailureReprotectAlsoFails);
   await checkAsync("dry-run path", testDryRunMakesNoMutatingCalls);
+  await checkAsync("entry blocked by open order", testEntryBlockedWhenOpenOrderExists);
+  await checkAsync("entry allowed with no open orders", testEntryAllowedWhenNoOpenOrders);
+  await checkAsync("exit blocked by non-stop sell already open", testExitBlockedWhenNonStopSellAlreadyOpen);
+  await checkAsync("exit not blocked by the expected stop leg", testExitNotBlockedByTheExpectedStopLeg);
 
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);

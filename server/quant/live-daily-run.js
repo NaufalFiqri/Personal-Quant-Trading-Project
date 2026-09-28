@@ -99,6 +99,26 @@ async function getAccountEquityOrFallback() {
   }
 }
 
+// Duplicate-order guard for the ENTER path: before submitting a fresh
+// entry, check whether any order is already open for this symbol - a
+// previous run's entry still pending, a stray manual order, anything. If
+// so, skip rather than risk stacking a second position on top of one
+// already in flight. Injectable alpacaClient for the same testability
+// reason as flattenPosition. Falls back to "not blocked" only in dry-run
+// with no credentials - a real run with no Alpaca connection throws instead
+// of guessing.
+async function checkEntryBlockedByOpenOrders(symbol, { alpacaClient } = {}) {
+  try {
+    const alpaca = alpacaClient || require("./alpaca");
+    const openOrders = await alpaca.getOrders({ status: "open", symbols: [symbol] });
+    return { blocked: openOrders.length > 0, openOrders, source: "real Alpaca account" };
+  } catch (err) {
+    if (!DRY_RUN) throw err;
+    log(`Alpaca not reachable/configured (${err.message}) - dry-run continuing, ASSUMING no open orders (not blocked)`);
+    return { blocked: false, openOrders: [], source: "ASSUMED (Alpaca not configured, dry-run only)" };
+  }
+}
+
 // Real, read-only call - always attempted even in dry-run, since dry-run's
 // whole point is to report accurately on real current conditions. Only
 // degrades to a fallback (treated as "closed", the conservative direction -
@@ -155,6 +175,16 @@ async function flattenPosition(symbol, { alpacaClient, dryRun = DRY_RUN } = {}) 
 
   const openOrders = await alpaca.getOrders({ status: "open", symbols: symbol });
   log(`flattenPosition(${symbol}): ${openOrders.length} open order(s) found: ${JSON.stringify(openOrders.map((o) => ({ id: o.id, type: o.type, side: o.side, stop_price: o.stop_price })))}`);
+
+  // Duplicate-exit guard: a non-stop sell order already open means an exit
+  // is already in flight (this function's own previous run, or a stray
+  // manual order) - the expected stop-loss leg being open is normal and
+  // handled below, but a plain pending sell is a sign not to duplicate it.
+  const nonStopSellOpen = openOrders.find((o) => o.side === "sell" && o.type !== "stop");
+  if (nonStopSellOpen) {
+    log(`flattenPosition(${symbol}): a non-stop sell order is already open (id=${nonStopSellOpen.id}, type=${nonStopSellOpen.type}) - an exit may already be in flight. Skipping to avoid duplicating it.`);
+    return { skipped: true, reason: "non-stop sell already open", existingOrder: nonStopSellOpen };
+  }
 
   if (dryRun) {
     log(`--dry-run: would call cancelOrder() for each of the ${openOrders.length} order(s) above, confirm each is canceled, then placeOrder({ symbol: "${symbol}", qty: "${heldQty}", side: "sell", type: "market", timeInForce: "day" }). No mutating calls made.`);
@@ -267,6 +297,16 @@ async function main() {
   let entryOrderPayload = null;
 
   if (todaysSignal && todaysSignal.action === "BUY" && !realPosition) {
+    const { blocked, openOrders, source: openOrdersSource } = await checkEntryBlockedByOpenOrders(TICKER, {});
+    if (blocked) {
+      action = "NO_ACTION";
+      reason = `duplicate-order guard (${openOrdersSource}): ${openOrders.length} open order(s) already exist for ${TICKER} - skipping entry to avoid stacking a second position: ${JSON.stringify(openOrders.map((o) => ({ id: o.id, type: o.type, side: o.side })))}`;
+      log(reason);
+      log(`Decision: ${action} (${reason})`);
+      log(`=== Daily run end ===\n`);
+      return;
+    }
+
     action = "ENTER";
     reason = `fresh BUY signal on ${today} and account is flat`;
 
@@ -324,4 +364,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { buildEntryOrderPayload, dropIntradayBarIfMarketOpen, flattenPosition };
+module.exports = { buildEntryOrderPayload, dropIntradayBarIfMarketOpen, flattenPosition, checkEntryBlockedByOpenOrders };
